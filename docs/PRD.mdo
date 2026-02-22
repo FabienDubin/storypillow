@@ -1,0 +1,294 @@
+# Storypillow — Product Requirements Document
+
+## 1. Vision & Objectif
+
+**Storypillow** est une application web qui permet à un parent de générer des histoires illustrées personnalisées pour son enfant, à lire le soir au coucher. L’app guide l’utilisateur à travers un processus créatif assisté par IA : choix de la thématique, génération d’un plan narratif, rédaction du texte, création de personnages visuellement cohérents, et génération d’illustrations — le tout aboutissant à une mise en page “livre illustré” lisible sur tablette.
+
+**Cible V1 :** Parent avec enfant de 5-8 ans, francophone.
+**Ambition :** POC fonctionnel containerisé, tournant en local sur un serveur Unraid, accessible via Twingate.
+
+-----
+
+## 2. User Flow
+
+### 2.1 Dashboard
+
+- Page d’accueil avec la **bibliothèque** des histoires déjà générées (cards avec cover, titre, date)
+- Bouton “Créer une nouvelle histoire”
+- Possibilité d’ouvrir une histoire existante en mode lecture
+
+### 2.2 Création — Étape 1 : Onboarding thématique
+
+L’utilisateur configure l’histoire via un formulaire guidé :
+
+**Sélecteurs (dropdowns) :**
+
+- **Thématique principale** : Aventure, Fantaisie/Magie, Animaux, Espace, Océan/Pirates, Nature/Forêt, Amitié, Super-héros, Contes classiques revisités, Voyage dans le temps
+- **Lieu** : Forêt enchantée, Château, Sous la mer, Espace, Village, Montagne, Île mystérieuse, Ville futuriste, Jungle, Monde miniature
+- **Ton** : Drôle, Poétique, Mystérieux, Héroïque, Tendre
+- **Valeur/Morale** : Courage, Amitié, Partage, Confiance en soi, Curiosité, Respect de la nature, Entraide, Persévérance, Acceptation des différences, Imagination
+
+**Slider :**
+
+- **Durée de lecture** : 5 min / 10 min / 15 min (impacte la longueur du texte généré)
+
+**Champs texte libres :**
+
+- **Contexte additionnel** : détails spécifiques souhaités par le parent (ex: “on est en vacances au bord de la mer”, “ma fille adore les chats”, “intégrer son doudou lapin”)
+- **Prénom de l’enfant** : pour personnaliser le protagoniste
+
+### 2.3 Création — Étape 2 : Plan narratif (chemin de fer)
+
+L’IA génère un plan structuré basé sur une structure narrative adaptée aux enfants :
+
+**Structure narrative :**
+
+1. **Introduction** — Présentation du protagoniste, du cadre, de la situation initiale
+1. **Élément déclencheur** — Un événement qui lance l’aventure
+1. **Développement / Péripéties** — 2 à 4 scènes avec montée progressive de la tension (adaptée à l’âge)
+1. **Climax** — Le moment fort où le protagoniste fait face au défi principal
+1. **Résolution** — Dénouement positif, la morale émerge naturellement
+1. **Conclusion** — Retour au calme, parfait pour la transition vers le sommeil
+
+**Affichage :** Liste ordonnée, chaque point = titre de la scène + 2-3 phrases de description.
+**Actions utilisateur :**
+
+- Éditer chaque point (inline edit)
+- Réordonner les points (drag & drop)
+- Ajouter/supprimer des points
+- Bouton “Valider le plan”
+
+### 2.4 Création — Étape 3 : Génération du texte
+
+- L’IA génère le texte complet de l’histoire basé sur le plan validé
+- Le texte est découpé en **sections/pages** correspondant aux points du plan
+- Chaque section affiche un **placeholder pour l’illustration** avec indication du positionnement
+- **Actions utilisateur :**
+  - Éditer le texte de chaque section (textarea éditable)
+  - Voir le compteur de mots / temps de lecture estimé
+  - Bouton “Valider le texte”
+
+### 2.5 Création — Étape 4 : Personnages
+
+Avant de générer les illustrations, l’utilisateur crée/valide les personnages :
+
+- L’IA **extrait automatiquement** la liste des personnages depuis le texte validé
+- Pour chaque personnage, l’utilisateur peut :
+  - **Uploader une image de référence** (photo de l’enfant, d’un jouet, etc.)
+  - **Ou générer un personnage via l’IA** avec un prompt guidé (description physique + style)
+  - Éditer la description du personnage
+- L’image de référence de chaque personnage sera utilisée pour la **consistance visuelle** dans toutes les illustrations
+- Style par défaut : **Digital painting cartoon, children’s book illustration style, warm colors, friendly**
+
+### 2.6 Création — Étape 5 : Illustrations
+
+- L’IA propose un **prompt d’image pour chaque section/page** basé sur le texte et les personnages
+- Affichage : liste des prompts avec preview de la section de texte correspondante
+- **Actions utilisateur :**
+  - Éditer chaque prompt
+  - Bouton “Générer toutes les images” (batch)
+  - Ou générer image par image
+  - Régénérer une image individuelle si pas satisfaisant
+- La génération utilise les **images de référence des personnages** pour la consistance
+- Format d’image : **4:3 paysage** (adapté lecture tablette)
+
+### 2.7 Mode Lecture
+
+- Mise en page **“livre illustré”** plein écran, optimisée tablette/iPad
+- Chaque page = illustration en haut (ou en fond) + texte en bas
+- Navigation : swipe gauche/droite ou boutons précédent/suivant
+- Typographie grande, lisible, adaptée lecture à voix haute
+- Mode sombre optionnel (lecture du soir)
+- Pas de distractions (UI minimale)
+
+-----
+
+## 3. Architecture Technique
+
+### 3.1 Stack
+
+- **Framework** : Next.js 16.1 (App Router, Turbopack)
+- **Styling** : Tailwind CSS v4
+- **Base de données** : SQLite (via better-sqlite3 + Drizzle ORM)
+- **Stockage images** : Filesystem local (dossier dans le volume Docker)
+- **IA Texte** : Google Gemini API (gemini-2.5-flash pour le texte — rapide et économique)
+- **IA Images** : Google Gemini API — gemini-2.5-flash-image (Nano Banana) pour la génération d’images avec consistance de personnages
+- **Containerisation** : Docker / Docker Compose
+- **Runtime** : Node.js 22 LTS
+
+### 3.2 Modèle de données (SQLite)
+
+**stories**
+
+|Champ     |Type       |Description                                                                 |
+|----------|-----------|----------------------------------------------------------------------------|
+|id        |TEXT (UUID)|Identifiant unique                                                          |
+|title     |TEXT       |Titre de l’histoire                                                         |
+|theme     |TEXT       |Thématique choisie                                                          |
+|setting   |TEXT       |Lieu choisi                                                                 |
+|tone      |TEXT       |Ton choisi                                                                  |
+|moral     |TEXT       |Valeur/morale choisie                                                       |
+|duration  |INTEGER    |Durée en minutes (5/10/15)                                                  |
+|child_name|TEXT       |Prénom de l’enfant                                                          |
+|context   |TEXT       |Contexte additionnel                                                        |
+|plan      |TEXT (JSON)|Plan narratif validé                                                        |
+|status    |TEXT       |draft / plan_ready / text_ready / characters_ready / images_ready / complete|
+|created_at|DATETIME   |Date de création                                                            |
+|updated_at|DATETIME   |Date de modification                                                        |
+
+**story_pages**
+
+|Champ       |Type       |Description                |
+|------------|-----------|---------------------------|
+|id          |TEXT (UUID)|Identifiant unique         |
+|story_id    |TEXT (FK)  |Référence à stories        |
+|page_number |INTEGER    |Numéro de page             |
+|title       |TEXT       |Titre de la scène          |
+|text        |TEXT       |Texte de la page           |
+|image_prompt|TEXT       |Prompt pour l’illustration |
+|image_path  |TEXT       |Chemin vers l’image générée|
+|created_at  |DATETIME   |Date de création           |
+
+**characters**
+
+|Champ               |Type       |Description                       |
+|--------------------|-----------|----------------------------------|
+|id                  |TEXT (UUID)|Identifiant unique                |
+|story_id            |TEXT (FK)  |Référence à stories               |
+|name                |TEXT       |Nom du personnage                 |
+|description         |TEXT       |Description physique et rôle      |
+|reference_image_path|TEXT       |Chemin vers l’image de référence  |
+|is_uploaded         |BOOLEAN    |true si uploadée, false si générée|
+|created_at          |DATETIME   |Date de création                  |
+
+### 3.3 API Routes (Next.js App Router)
+
+```
+POST   /api/stories                    → Créer une nouvelle histoire
+GET    /api/stories                    → Liste des histoires
+GET    /api/stories/[id]               → Détail d'une histoire
+PUT    /api/stories/[id]               → Mettre à jour une histoire
+DELETE /api/stories/[id]               → Supprimer une histoire
+
+POST   /api/stories/[id]/generate-plan → Générer le plan narratif
+POST   /api/stories/[id]/generate-text → Générer le texte complet
+PUT    /api/stories/[id]/pages/[pageId] → Éditer une page
+
+GET    /api/stories/[id]/characters    → Liste des personnages
+POST   /api/stories/[id]/characters    → Créer/extraire les personnages
+PUT    /api/characters/[id]            → Éditer un personnage
+POST   /api/characters/[id]/generate-image → Générer l'image du personnage
+POST   /api/characters/[id]/upload     → Uploader une image de référence
+
+POST   /api/stories/[id]/generate-images     → Générer toutes les illustrations
+POST   /api/stories/[id]/pages/[pageId]/generate-image → Générer une illustration
+```
+
+### 3.4 Prompts IA — Directives
+
+**Génération du plan :**
+
+- System prompt incluant les principes de narration pour enfants (structure en 5-6 actes)
+- Adapter la complexité et le nombre de péripéties selon la durée choisie
+- Le plan doit inclure des indications visuelles (ce qui sera illustrable)
+
+**Génération du texte :**
+
+- Vocabulaire adapté à un enfant de 6 ans
+- Phrases courtes et rythmées (lecture à voix haute)
+- Dialogue fréquents pour rendre vivant
+- Onomatopées et répétitions (techniques narratives orales)
+- Fin douce et apaisante (contexte coucher)
+- Environ 150 mots par minute de lecture
+
+**Génération des personnages :**
+
+- Style fixe : “children’s book digital painting, cartoon style, warm and soft colors, friendly expression, white background, character sheet”
+- Si image de référence uploadée : inclure comme input dans le prompt Gemini pour maintenir la ressemblance
+
+**Génération des illustrations :**
+
+- Style fixe : “children’s book illustration, digital painting, cartoon style, warm lighting, soft colors, cozy atmosphere”
+- Inclure les images de référence des personnages présents dans la scène
+- Format 4:3 paysage
+- Utiliser les capacités de consistance de Gemini (jusqu’à 14 images de référence par prompt)
+
+### 3.5 Containerisation
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  storypillow:
+    build: .
+    ports:
+      - "3333:3000"
+    volumes:
+      - ./data:/app/data          # SQLite DB
+      - ./uploads:/app/uploads    # Images uploadées
+      - ./generated:/app/generated # Images générées
+    environment:
+      - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY}
+      - DATABASE_URL=file:/app/data/storypillow.db
+```
+
+-----
+
+## 4. Design & UX
+
+### 4.1 Direction artistique
+
+- **Thème** : Chaleureux, nocturne, cozy — comme une veilleuse
+- **Palette** : Tons bleu nuit, violet doux, jaune doré (lune/étoiles), blanc cassé pour le texte
+- **Typographie** : Font ludique mais lisible pour les titres, serif douce pour le texte de lecture
+- **Ambiance** : Étoiles, lune, nuages doux en éléments décoratifs subtils
+- **Mode lecture** : Fond crème/sombre, zéro distraction, focus sur l’histoire
+
+### 4.2 Responsive
+
+- **Priorité tablette** (iPad) pour le mode lecture
+- **Desktop** pour la création/édition
+- **Mobile** : utilisable mais pas la priorité
+
+-----
+
+## 5. Configuration requise
+
+### Pour l’utilisateur
+
+- Navigateur moderne
+- Connexion internet (pour les appels API Gemini)
+- Clé API Google AI Studio (Gemini)
+
+### Pour le déploiement
+
+- Docker + Docker Compose
+- Serveur avec au minimum 1GB RAM
+- Stockage pour les images générées (~2-5MB par image, ~10-15 images par histoire)
+
+-----
+
+## 6. Contraintes & Décisions
+
+|Décision     |Choix                 |Raison                                                          |
+|-------------|----------------------|----------------------------------------------------------------|
+|DB           |SQLite                |Zéro config, parfait pour POC Docker                            |
+|IA unique    |Google Gemini         |Texte + images via une seule API, consistance personnages native|
+|Modèle images|gemini-2.5-flash-image|Bon rapport qualité/coût, consistance personnages, ~$0.04/image |
+|Style images |Un seul style fixe    |Simplifier la V1, cartoon digital painting pour enfants         |
+|Auth         |Aucune                |POC local, accessible uniquement via VPN (Twingate)             |
+|i18n         |Non en V1             |Histoires en français, UI en anglais (ou français)              |
+|Pas de BMAD  |PRD direct            |Projet bien scopé, pas besoin du framework complet              |
+
+-----
+
+## 7. Roadmap future (hors V1)
+
+- Authentification multi-utilisateurs
+- Choix du style artistique (aquarelle, pixel art, anime…)
+- Audio/TTS — lecture automatique de l’histoire
+- Export PDF du livre
+- Partage d’histoires entre utilisateurs
+- Thèmes saisonniers (Noël, Halloween…)
+- PostgreSQL / MongoDB pour la prod
+- Déploiement cloud (Vercel + Supabase)
