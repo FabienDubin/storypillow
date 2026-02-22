@@ -47,6 +47,8 @@ next-env.d.ts
 # data directories (Docker volumes)
 /data/*.db
 /data/*.db-journal
+/data/*.db-shm
+/data/*.db-wal
 /uploads/*
 /generated/*
 !/data/.gitkeep
