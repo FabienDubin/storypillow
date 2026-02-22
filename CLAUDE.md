@@ -118,13 +118,17 @@ storypillow/
 
 ## Commands
 
-```bash^x ^x# Development npm run dev # Start 
-dev server npm run build # Build for 
-production npm run db:push # Push schema 
-changes to SQLite npm run db:studio # Open 
-Drizzle Studio ^x ^x# Docker docker compose 
-up --build # Build and run docker compose 
-down # Stop ``` 
+```bash
+# Development
+npm run dev          # Start dev server (Turbopack)
+npm run build        # Build for production
+npm run db:push      # Push schema changes to SQLite
+npm run db:studio    # Open Drizzle Studio
+
+# Docker
+docker compose up --build   # Build and run
+docker compose down         # Stop
+```
 
 ## Environment Variables
 
@@ -142,3 +146,18 @@ DATABASE_URL=file:./data/storypillow.db
 - All images stored on local filesystem
 - Must work in Docker on Unraid
 - Port: 3333 (mapped to internal 3000)
+
+## Implementation Status
+
+### Completed
+
+1. **Project Setup** — Next.js 16.1, TypeScript (strict), Tailwind CSS v4, Drizzle ORM + better-sqlite3, Docker config, all dependencies installed.
+2. **Database Schema** — `stories`, `story_pages`, `characters` tables defined in `src/lib/db/schema.ts`. Auto-initialization on startup via `src/lib/db/index.ts` (WAL mode, foreign keys).
+3. **Types & Utilities** — Shared types in `src/types/index.ts` (Story, StoryPage, Character, PlanItem, form options). Utility functions in `src/lib/utils/index.ts`.
+4. **AI Integration** — Gemini client (`src/lib/ai/client.ts`), all prompts (`src/lib/ai/prompts.ts`), generators for plan, text, character extraction, character images, illustrations. Character reference images passed for consistency.
+5. **API Routes** — Full REST API: stories CRUD, plan generation, text generation, character extraction, character image generation/upload, page illustration generation (single + batch), image serving route.
+6. **UI Components** — StarField (animated background), Button, Card, Select, Input, DurationSlider, Header, StepIndicator.
+7. **Dashboard** — Story library with cards, status badges, create/delete/open actions.
+8. **Story Creation Wizard** — 5-step flow: Step 1 (onboarding form), Step 2 (plan review with inline edit, reorder, add/remove), Step 3 (text review with word count), Step 4 (characters with generate/upload), Step 5 (illustration prompts + batch generate).
+9. **Reading Mode** — Full-screen book layout, keyboard/swipe navigation, dark/light mode toggle, progress dots, minimal UI.
+10. **Docker** — Dockerfile (multi-stage, standalone output), docker-compose.yml (port 3333:3000, volumes for data/uploads/generated).

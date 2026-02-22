@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+:root {
+  --navy: #1a1a4e;
+  --navy-light: #252570;
+  --purple: #6b5b95;
+  --purple-light: #8b7db5;
+  --gold: #f4c542;
+  --gold-light: #ffd966;
+  --cream: #fef9ef;
+  --cream-dark: #f5edd6;
+  --text-dark: #1a1a2e;
+  --text-light: #fef9ef;
+}
+
+@theme inline {
+  --color-navy: var(--navy);
+  --color-navy-light: var(--navy-light);
+  --color-purple: var(--purple);
+  --color-purple-light: var(--purple-light);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-cream: var(--cream);
+  --color-cream-dark: var(--cream-dark);
+}
+
+body {
+  background: var(--navy);
+  color: var(--text-light);
+  font-family: "Georgia", "Times New Roman", serif;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--navy);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--purple);
+  border-radius: 4px;
+}
+
+/* Stars animation */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.star {
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
