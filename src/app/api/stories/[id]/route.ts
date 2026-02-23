@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { stories, storyPages, characters } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { updateStorySchema, parseBody } from "@/lib/validations";
 
 // GET /api/stories/[id] — Get story details with pages and characters
 export async function GET(
@@ -27,9 +28,16 @@ export async function GET(
     .from(characters)
     .where(eq(characters.storyId, id));
 
+  let plan = null;
+  try {
+    plan = story.plan ? JSON.parse(story.plan) : null;
+  } catch {
+    plan = null;
+  }
+
   return NextResponse.json({
     ...story,
-    plan: story.plan ? JSON.parse(story.plan) : null,
+    plan,
     pages,
     characters: chars,
   });
@@ -41,23 +49,39 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const body = await request.json();
+
+  const story = await db.select().from(stories).where(eq(stories.id, id)).get();
+  if (!story) {
+    return NextResponse.json({ error: "Story not found" }, { status: 404 });
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const parsed = parseBody(updateStorySchema, body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
+  }
 
   const updateData: Record<string, unknown> = {
     updatedAt: new Date().toISOString(),
   };
 
-  if (body.title !== undefined) updateData.title = body.title;
-  if (body.theme !== undefined) updateData.theme = body.theme;
-  if (body.setting !== undefined) updateData.setting = body.setting;
-  if (body.tone !== undefined) updateData.tone = body.tone;
-  if (body.moral !== undefined) updateData.moral = body.moral;
-  if (body.duration !== undefined) updateData.duration = body.duration;
-  if (body.childName !== undefined) updateData.childName = body.childName;
-  if (body.context !== undefined) updateData.context = body.context;
-  if (body.plan !== undefined)
-    updateData.plan = JSON.stringify(body.plan);
-  if (body.status !== undefined) updateData.status = body.status;
+  if (parsed.data.title !== undefined) updateData.title = parsed.data.title;
+  if (parsed.data.theme !== undefined) updateData.theme = parsed.data.theme;
+  if (parsed.data.setting !== undefined) updateData.setting = parsed.data.setting;
+  if (parsed.data.tone !== undefined) updateData.tone = parsed.data.tone;
+  if (parsed.data.moral !== undefined) updateData.moral = parsed.data.moral;
+  if (parsed.data.duration !== undefined) updateData.duration = parsed.data.duration;
+  if (parsed.data.childName !== undefined) updateData.childName = parsed.data.childName;
+  if (parsed.data.context !== undefined) updateData.context = parsed.data.context;
+  if (parsed.data.plan !== undefined)
+    updateData.plan = JSON.stringify(parsed.data.plan);
+  if (parsed.data.status !== undefined) updateData.status = parsed.data.status;
 
   await db.update(stories).set(updateData).where(eq(stories.id, id));
 
@@ -70,6 +94,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+
+  const story = await db.select().from(stories).where(eq(stories.id, id)).get();
+  if (!story) {
+    return NextResponse.json({ error: "Story not found" }, { status: 404 });
+  }
 
   await db.delete(stories).where(eq(stories.id, id));
 

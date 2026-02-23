@@ -23,17 +23,25 @@ export async function generatePlan(params: {
   const response = result.response;
   const text = response.text();
 
-  // Extract JSON from the response
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  // Extract JSON from the response (non-greedy)
+  const jsonMatch = text.match(/\{[\s\S]*?\}(?=[^}]*$)/);
   if (!jsonMatch) {
     throw new Error("Failed to parse plan response from AI");
   }
 
-  const parsed = JSON.parse(jsonMatch[0]) as GeneratePlanResult;
+  const parsed = JSON.parse(jsonMatch[0]);
 
-  if (!parsed.title || !Array.isArray(parsed.plan)) {
-    throw new Error("Invalid plan structure from AI");
+  if (!parsed.title || typeof parsed.title !== "string") {
+    throw new Error("Invalid plan structure: missing title");
+  }
+  if (!Array.isArray(parsed.plan)) {
+    throw new Error("Invalid plan structure: missing plan array");
+  }
+  for (const item of parsed.plan) {
+    if (!item.title || !item.description) {
+      throw new Error("Invalid plan item: missing title or description");
+    }
   }
 
-  return parsed;
+  return parsed as GeneratePlanResult;
 }

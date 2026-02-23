@@ -24,16 +24,24 @@ export async function generateText(params: {
   const response = result.response;
   const text = response.text();
 
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  const jsonMatch = text.match(/\{[\s\S]*?\}(?=[^}]*$)/);
   if (!jsonMatch) {
     throw new Error("Failed to parse text response from AI");
   }
 
-  const parsed = JSON.parse(jsonMatch[0]) as GenerateTextResult;
+  const parsed = JSON.parse(jsonMatch[0]);
 
   if (!Array.isArray(parsed.pages)) {
-    throw new Error("Invalid text structure from AI");
+    throw new Error("Invalid text structure: missing pages array");
+  }
+  for (const page of parsed.pages) {
+    if (!page.title || typeof page.title !== "string") {
+      throw new Error("Invalid page: missing title");
+    }
+    if (!page.text || typeof page.text !== "string") {
+      throw new Error("Invalid page: missing text");
+    }
   }
 
-  return parsed;
+  return parsed as GenerateTextResult;
 }

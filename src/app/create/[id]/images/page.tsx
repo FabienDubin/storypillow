@@ -42,7 +42,7 @@ export default function ImagesPage({
             (p: StoryPage) => !p.imagePrompt
           );
           if (needsPrompts) {
-            generatePrompts(data.pages);
+            generatePrompts();
           }
         }
         setLoading(false);
@@ -50,34 +50,22 @@ export default function ImagesPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  async function generatePrompts(currentPages: StoryPage[]) {
+  async function generatePrompts() {
     try {
-      // Use text model to generate prompts
-      const res = await fetch(`/api/stories/${id}`, {
-        method: "GET",
+      const res = await fetch(`/api/stories/${id}/generate-prompts`, {
+        method: "POST",
       });
-      const storyData = await res.json();
 
-      // Simple prompt generation based on page content
-      const updatedPages = currentPages.map((page) => ({
-        ...page,
-        imagePrompt:
-          page.imagePrompt ||
-          `children's book illustration, digital painting, cartoon style, warm lighting, soft colors, cozy atmosphere, ${page.title}: ${page.text.substring(0, 200)}`,
-      }));
-
-      // Save prompts to DB
-      for (const page of updatedPages) {
-        if (!currentPages.find((p) => p.id === page.id)?.imagePrompt) {
-          await fetch(`/api/stories/${storyData.id}/pages/${page.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ imagePrompt: page.imagePrompt }),
-          });
-        }
+      if (!res.ok) {
+        // Fallback: use simple client-side prompts
+        console.error("AI prompt generation failed, using fallback");
+        return;
       }
 
-      setPages(updatedPages);
+      const data = await res.json();
+      if (data.pages) {
+        setPages(data.pages);
+      }
     } catch (err) {
       console.error("Error generating prompts:", err);
     }

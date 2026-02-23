@@ -14,12 +14,17 @@ export async function generateImagePrompts(
   const response = result.response;
   const text = response.text();
 
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  const jsonMatch = text.match(/\{[\s\S]*?\}(?=[^}]*$)/);
   if (!jsonMatch) {
     throw new Error("Failed to parse image prompt suggestions");
   }
 
   const parsed = JSON.parse(jsonMatch[0]);
+
+  if (!Array.isArray(parsed.prompts)) {
+    throw new Error("Invalid prompt suggestions: missing prompts array");
+  }
+
   return parsed.prompts as string[];
 }
 

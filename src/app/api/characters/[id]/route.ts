@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { characters } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { updateCharacterSchema, parseBody } from "@/lib/validations";
 
 // PUT /api/characters/[id] — Update a character
 export async function PUT(
@@ -9,11 +10,27 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const body = await request.json();
+
+  const character = await db.select().from(characters).where(eq(characters.id, id)).get();
+  if (!character) {
+    return NextResponse.json({ error: "Character not found" }, { status: 404 });
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const parsed = parseBody(updateCharacterSchema, body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
+  }
 
   const updateData: Record<string, unknown> = {};
-  if (body.name !== undefined) updateData.name = body.name;
-  if (body.description !== undefined) updateData.description = body.description;
+  if (parsed.data.name !== undefined) updateData.name = parsed.data.name;
+  if (parsed.data.description !== undefined) updateData.description = parsed.data.description;
 
   await db.update(characters).set(updateData).where(eq(characters.id, id));
 

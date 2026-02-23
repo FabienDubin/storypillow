@@ -4,12 +4,23 @@ import * as schema from "./schema";
 import path from "path";
 import fs from "fs";
 
-const dbDir = path.resolve(process.cwd(), "data");
+// Read DATABASE_URL or fall back to default path
+const envUrl = process.env.DATABASE_URL;
+let dbPath: string;
+if (envUrl) {
+  // Strip "file:" prefix if present
+  dbPath = envUrl.replace(/^file:/, "");
+  if (!path.isAbsolute(dbPath)) {
+    dbPath = path.resolve(process.cwd(), dbPath);
+  }
+} else {
+  dbPath = path.join(process.cwd(), "data", "storypillow.db");
+}
+
+const dbDir = path.dirname(dbPath);
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
-
-const dbPath = path.join(dbDir, "storypillow.db");
 const sqlite = new Database(dbPath);
 
 // Enable WAL mode for better performance

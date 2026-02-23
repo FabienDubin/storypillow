@@ -16,6 +16,13 @@ export async function POST(
     return NextResponse.json({ error: "Story not found" }, { status: 404 });
   }
 
+  if (story.status !== "draft") {
+    return NextResponse.json(
+      { error: "Le plan ne peut être généré que pour une histoire en brouillon." },
+      { status: 400 }
+    );
+  }
+
   try {
     const result = await generatePlan({
       theme: story.theme,
@@ -44,7 +51,7 @@ export async function POST(
   } catch (error) {
     console.error("Plan generation error:", error);
     return NextResponse.json(
-      { error: "Failed to generate plan. Please check your API key." },
+      { error: "Échec de la génération du plan." },
       { status: 500 }
     );
   }

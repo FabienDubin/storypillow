@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { stories } from "@/lib/db/schema";
 import { generateId } from "@/lib/utils";
 import { desc } from "drizzle-orm";
+import { createStorySchema, parseBody } from "@/lib/validations";
 
 // GET /api/stories — List all stories
 export async function GET() {
@@ -13,7 +14,7 @@ export async function GET() {
 
   const mapped = allStories.map((s) => ({
     ...s,
-    plan: s.plan ? JSON.parse(s.plan) : null,
+    plan: s.plan ? (() => { try { return JSON.parse(s.plan); } catch { return null; } })() : null,
   }));
 
   return NextResponse.json(mapped);
@@ -21,7 +22,17 @@ export async function GET() {
 
 // POST /api/stories — Create a new story
 export async function POST(request: NextRequest) {
-  const body = await request.json();
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const parsed = parseBody(createStorySchema, body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
+  }
 
   const id = generateId();
   const now = new Date().toISOString();
@@ -29,13 +40,13 @@ export async function POST(request: NextRequest) {
   await db.insert(stories).values({
     id,
     title: "",
-    theme: body.theme,
-    setting: body.setting,
-    tone: body.tone,
-    moral: body.moral,
-    duration: body.duration,
-    childName: body.childName,
-    context: body.context || "",
+    theme: parsed.data.theme,
+    setting: parsed.data.setting,
+    tone: parsed.data.tone,
+    moral: parsed.data.moral,
+    duration: parsed.data.duration,
+    childName: parsed.data.childName,
+    context: parsed.data.context || "",
     status: "draft",
     createdAt: now,
     updatedAt: now,

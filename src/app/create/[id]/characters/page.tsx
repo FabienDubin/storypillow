@@ -126,13 +126,15 @@ export default function CharactersPage({
     }
   }
 
-  async function handleEditDescription(characterId: string, description: string) {
+  function handleEditDescription(characterId: string, description: string) {
     setCharacters((prev) =>
       prev.map((c) =>
         c.id === characterId ? { ...c, description } : c
       )
     );
+  }
 
+  async function handleSaveDescription(characterId: string, description: string) {
     await fetch(`/api/characters/${characterId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -251,6 +253,9 @@ export default function CharactersPage({
                         value={char.description}
                         onChange={(e) =>
                           handleEditDescription(char.id, e.target.value)
+                        }
+                        onBlur={(e) =>
+                          handleSaveDescription(char.id, e.target.value)
                         }
                         rows={4}
                         className="w-full bg-navy border border-purple/20 text-cream/80 rounded-xl p-3 font-sans text-sm focus:outline-none focus:ring-1 focus:ring-gold/30 resize-none"

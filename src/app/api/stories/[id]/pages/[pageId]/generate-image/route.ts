@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { storyPages, characters } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { generateIllustration } from "@/lib/ai/generate-illustration";
-import fs from "fs";
-import path from "path";
+import { loadReferenceImages } from "@/lib/utils/load-reference-images";
 
 // POST /api/stories/[id]/pages/[pageId]/generate-image
 export async function POST(
@@ -16,7 +15,7 @@ export async function POST(
   const page = await db
     .select()
     .from(storyPages)
-    .where(eq(storyPages.id, pageId))
+    .where(and(eq(storyPages.id, pageId), eq(storyPages.storyId, id)))
     .get();
 
   if (!page) {
@@ -30,24 +29,13 @@ export async function POST(
     );
   }
 
-  // Load character reference images
+  // Load character reference images safely
   const chars = await db
     .select()
     .from(characters)
     .where(eq(characters.storyId, id));
 
-  const referenceImages: { mimeType: string; data: string }[] = [];
-  for (const char of chars) {
-    if (char.referenceImagePath) {
-      const absPath = path.resolve(process.cwd(), char.referenceImagePath.replace(/^\//, ""));
-      if (fs.existsSync(absPath)) {
-        const data = fs.readFileSync(absPath).toString("base64");
-        const ext = path.extname(absPath).toLowerCase();
-        const mimeType = ext === ".png" ? "image/png" : "image/jpeg";
-        referenceImages.push({ mimeType, data });
-      }
-    }
-  }
+  const referenceImages = loadReferenceImages(chars);
 
   try {
     const imagePath = await generateIllustration(

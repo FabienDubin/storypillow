@@ -21,12 +21,25 @@ export async function extractCharacters(
   const response = result.response;
   const text = response.text();
 
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  const jsonMatch = text.match(/\{[\s\S]*?\}(?=[^}]*$)/);
   if (!jsonMatch) {
     throw new Error("Failed to parse character extraction response");
   }
 
   const parsed = JSON.parse(jsonMatch[0]);
+
+  if (!Array.isArray(parsed.characters)) {
+    throw new Error("Invalid character extraction: missing characters array");
+  }
+  for (const char of parsed.characters) {
+    if (!char.name || typeof char.name !== "string") {
+      throw new Error("Invalid character: missing name");
+    }
+    if (!char.description || typeof char.description !== "string") {
+      throw new Error("Invalid character: missing description");
+    }
+  }
+
   return parsed.characters as ExtractedCharacter[];
 }
 

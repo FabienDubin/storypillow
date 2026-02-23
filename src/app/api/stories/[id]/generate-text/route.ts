@@ -17,6 +17,13 @@ export async function POST(
     return NextResponse.json({ error: "Story not found" }, { status: 404 });
   }
 
+  if (story.status !== "plan_ready") {
+    return NextResponse.json(
+      { error: "Le texte ne peut être généré qu'après validation du plan." },
+      { status: 400 }
+    );
+  }
+
   if (!story.plan) {
     return NextResponse.json(
       { error: "Story plan not found. Generate a plan first." },
@@ -24,7 +31,15 @@ export async function POST(
     );
   }
 
-  const plan = JSON.parse(story.plan);
+  let plan;
+  try {
+    plan = JSON.parse(story.plan);
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid plan data." },
+      { status: 500 }
+    );
+  }
 
   try {
     const result = await generateText({
@@ -39,29 +54,31 @@ export async function POST(
       context: story.context || "",
     });
 
-    // Delete existing pages
-    await db.delete(storyPages).where(eq(storyPages.storyId, id));
-
-    // Insert new pages
     const now = new Date().toISOString();
-    for (let i = 0; i < result.pages.length; i++) {
-      await db.insert(storyPages).values({
-        id: generateId(),
-        storyId: id,
-        pageNumber: i + 1,
-        title: result.pages[i].title,
-        text: result.pages[i].text,
-        createdAt: now,
-      });
-    }
 
-    await db
-      .update(stories)
-      .set({
-        status: "text_ready",
-        updatedAt: now,
-      })
-      .where(eq(stories.id, id));
+    // Use a transaction for atomic page replacement
+    await db.transaction(async (tx) => {
+      await tx.delete(storyPages).where(eq(storyPages.storyId, id));
+
+      for (let i = 0; i < result.pages.length; i++) {
+        await tx.insert(storyPages).values({
+          id: generateId(),
+          storyId: id,
+          pageNumber: i + 1,
+          title: result.pages[i].title,
+          text: result.pages[i].text,
+          createdAt: now,
+        });
+      }
+
+      await tx
+        .update(stories)
+        .set({
+          status: "text_ready",
+          updatedAt: now,
+        })
+        .where(eq(stories.id, id));
+    });
 
     // Fetch created pages
     const pages = await db
@@ -74,7 +91,7 @@ export async function POST(
   } catch (error) {
     console.error("Text generation error:", error);
     return NextResponse.json(
-      { error: "Failed to generate text. Please check your API key." },
+      { error: "Échec de la génération du texte." },
       { status: 500 }
     );
   }

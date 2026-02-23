@@ -3,8 +3,7 @@ import { db } from "@/lib/db";
 import { stories, storyPages, characters } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { generateIllustration } from "@/lib/ai/generate-illustration";
-import fs from "fs";
-import path from "path";
+import { loadReferenceImages } from "@/lib/utils/load-reference-images";
 
 // POST /api/stories/[id]/generate-images — Generate all illustrations
 export async function POST(
@@ -12,6 +11,18 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+
+  const story = await db.select().from(stories).where(eq(stories.id, id)).get();
+  if (!story) {
+    return NextResponse.json({ error: "Story not found" }, { status: 404 });
+  }
+
+  if (story.status !== "characters_ready" && story.status !== "images_ready") {
+    return NextResponse.json(
+      { error: "Les images ne peuvent être générées qu'après la création des personnages." },
+      { status: 400 }
+    );
+  }
 
   const pages = await db
     .select()
@@ -23,24 +34,13 @@ export async function POST(
     return NextResponse.json({ error: "No pages found" }, { status: 404 });
   }
 
-  // Load character reference images
+  // Load character reference images safely
   const chars = await db
     .select()
     .from(characters)
     .where(eq(characters.storyId, id));
 
-  const referenceImages: { mimeType: string; data: string }[] = [];
-  for (const char of chars) {
-    if (char.referenceImagePath) {
-      const absPath = path.resolve(process.cwd(), char.referenceImagePath.replace(/^\//, ""));
-      if (fs.existsSync(absPath)) {
-        const data = fs.readFileSync(absPath).toString("base64");
-        const ext = path.extname(absPath).toLowerCase();
-        const mimeType = ext === ".png" ? "image/png" : "image/jpeg";
-        referenceImages.push({ mimeType, data });
-      }
-    }
-  }
+  const referenceImages = loadReferenceImages(chars);
 
   const results: { pageId: string; imagePath: string | null; error?: string }[] = [];
 
@@ -80,11 +80,6 @@ export async function POST(
     await db
       .update(stories)
       .set({ status: "complete", updatedAt: new Date().toISOString() })
-      .where(eq(stories.id, id));
-  } else {
-    await db
-      .update(stories)
-      .set({ status: "images_ready", updatedAt: new Date().toISOString() })
       .where(eq(stories.id, id));
   }
 

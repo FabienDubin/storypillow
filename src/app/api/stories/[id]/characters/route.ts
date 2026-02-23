@@ -27,6 +27,18 @@ export async function POST(
 ) {
   const { id } = await params;
 
+  const story = await db.select().from(stories).where(eq(stories.id, id)).get();
+  if (!story) {
+    return NextResponse.json({ error: "Story not found" }, { status: 404 });
+  }
+
+  if (story.status !== "text_ready") {
+    return NextResponse.json(
+      { error: "Les personnages ne peuvent être extraits qu'après génération du texte." },
+      { status: 400 }
+    );
+  }
+
   const pages = await db
     .select()
     .from(storyPages)
@@ -45,38 +57,47 @@ export async function POST(
       pages.map((p) => ({ title: p.title, text: p.text }))
     );
 
-    // Delete existing characters
-    await db.delete(characters).where(eq(characters.storyId, id));
-
     const now = new Date().toISOString();
-    const created = [];
+    const created: Array<{
+      id: string;
+      storyId: string;
+      name: string;
+      description: string;
+      referenceImagePath: string | null;
+      isUploaded: boolean;
+      createdAt: string;
+    }> = [];
 
-    for (const char of extracted) {
-      const charId = generateId();
-      await db.insert(characters).values({
-        id: charId,
-        storyId: id,
-        name: char.name,
-        description: char.description,
-        isUploaded: false,
-        createdAt: now,
-      });
-      created.push({
-        id: charId,
-        storyId: id,
-        name: char.name,
-        description: char.description,
-        referenceImagePath: null,
-        isUploaded: false,
-        createdAt: now,
-      });
-    }
+    // Use a transaction for atomic character replacement
+    await db.transaction(async (tx) => {
+      await tx.delete(characters).where(eq(characters.storyId, id));
 
-    // Update story status
-    await db
-      .update(stories)
-      .set({ status: "characters_ready", updatedAt: now })
-      .where(eq(stories.id, id));
+      for (const char of extracted) {
+        const charId = generateId();
+        await tx.insert(characters).values({
+          id: charId,
+          storyId: id,
+          name: char.name,
+          description: char.description,
+          isUploaded: false,
+          createdAt: now,
+        });
+        created.push({
+          id: charId,
+          storyId: id,
+          name: char.name,
+          description: char.description,
+          referenceImagePath: null,
+          isUploaded: false,
+          createdAt: now,
+        });
+      }
+
+      await tx
+        .update(stories)
+        .set({ status: "characters_ready", updatedAt: now })
+        .where(eq(stories.id, id));
+    });
 
     return NextResponse.json(created);
   } catch (error) {
