@@ -117,18 +117,6 @@ export function buildCharacterImagePrompt(character: {
   return `children's book digital painting, cartoon style, warm and soft colors, friendly expression, white background, character sheet, full body view of ${character.name}: ${character.description}`;
 }
 
-export function buildIllustrationPrompt(params: {
-  sceneTitle: string;
-  sceneText: string;
-  characters: { name: string; description: string }[];
-}): string {
-  const characterList = params.characters
-    .map((c) => `${c.name} (${c.description})`)
-    .join(", ");
-
-  return `children's book illustration, digital painting, cartoon style, warm lighting, soft colors, cozy atmosphere, ${params.sceneTitle}: ${params.sceneText}${characterList ? `. Characters present: ${characterList}` : ""}`;
-}
-
 export function buildImagePromptSuggestions(pages: { title: string; text: string }[], characters: { name: string; description: string }[]): string {
   const pagesText = pages
     .map((p, i) => `Page ${i + 1} - ${p.title}: ${p.text}`)
