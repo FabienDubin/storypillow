@@ -33,19 +33,21 @@ export default function ReadPage({
   const goNext = useCallback(() => {
     if (currentPage < pages.length - 1) {
       setCurrentPage((p) => p + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [currentPage, pages.length]);
 
   const goPrev = useCallback(() => {
     if (currentPage > 0) {
       setCurrentPage((p) => p - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [currentPage]);
 
-  // Keyboard navigation
+  // Keyboard navigation (arrow keys only — space must scroll)
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "ArrowRight" || e.key === " ") {
+      if (e.key === "ArrowRight") {
         e.preventDefault();
         goNext();
       } else if (e.key === "ArrowLeft") {
@@ -60,26 +62,32 @@ export default function ReadPage({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [goNext, goPrev, router]);
 
-  // Touch/swipe navigation
+  // Touch/swipe navigation — only trigger on deliberate horizontal swipes
   useEffect(() => {
     let startX = 0;
+    let startY = 0;
 
     function handleTouchStart(e: TouchEvent) {
       startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
     }
 
     function handleTouchEnd(e: TouchEvent) {
       const endX = e.changedTouches[0].clientX;
-      const diff = startX - endX;
+      const endY = e.changedTouches[0].clientY;
+      const diffX = startX - endX;
+      const diffY = startY - endY;
 
-      if (Math.abs(diff) > 50) {
-        if (diff > 0) goNext();
+      // Only navigate if horizontal movement is dominant (>2x vertical)
+      // and exceeds the minimum threshold
+      if (Math.abs(diffX) > 80 && Math.abs(diffX) > Math.abs(diffY) * 2) {
+        if (diffX > 0) goNext();
         else goPrev();
       }
     }
 
-    window.addEventListener("touchstart", handleTouchStart);
-    window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchend", handleTouchEnd, { passive: true });
     return () => {
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchend", handleTouchEnd);
@@ -143,10 +151,10 @@ export default function ReadPage({
         </button>
       </div>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col">
+      {/* Main content — fade transition between pages */}
+      <div className="flex-1 flex flex-col pt-12 transition-opacity duration-300" key={currentPage}>
         {/* Illustration */}
-        <div className="flex-1 relative overflow-hidden">
+        <div className="flex-1 relative overflow-hidden min-h-[40vh]">
           {page.imagePath ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
