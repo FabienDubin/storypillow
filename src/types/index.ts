@@ -1,3 +1,21 @@
+export type UserRole = "admin" | "user";
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SessionPayload {
+  userId: string;
+  email: string;
+  name: string;
+  role: UserRole;
+}
+
 export type StoryStatus =
   | "draft"
   | "plan_ready"

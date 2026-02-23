@@ -9,5 +9,6 @@ services:
       - ./generated:/app/generated
     environment:
       - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY}
+      - AUTH_SECRET=${AUTH_SECRET}
       - DATABASE_URL=file:/app/data/storypillow.db
     restart: unless-stopped
