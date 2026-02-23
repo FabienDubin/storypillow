@@ -68,13 +68,13 @@ export async function POST(
       createdAt: string;
     }> = [];
 
-    // Use a transaction for atomic character replacement
-    await db.transaction(async (tx) => {
-      await tx.delete(characters).where(eq(characters.storyId, id));
+    // Use a transaction for atomic character replacement (sync for better-sqlite3)
+    db.transaction((tx) => {
+      tx.delete(characters).where(eq(characters.storyId, id));
 
       for (const char of extracted) {
         const charId = generateId();
-        await tx.insert(characters).values({
+        tx.insert(characters).values({
           id: charId,
           storyId: id,
           name: char.name,
@@ -93,7 +93,7 @@ export async function POST(
         });
       }
 
-      await tx
+      tx
         .update(stories)
         .set({ status: "characters_ready", updatedAt: now })
         .where(eq(stories.id, id));

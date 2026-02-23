@@ -56,12 +56,12 @@ export async function POST(
 
     const now = new Date().toISOString();
 
-    // Use a transaction for atomic page replacement
-    await db.transaction(async (tx) => {
-      await tx.delete(storyPages).where(eq(storyPages.storyId, id));
+    // Use a transaction for atomic page replacement (sync for better-sqlite3)
+    db.transaction((tx) => {
+      tx.delete(storyPages).where(eq(storyPages.storyId, id));
 
       for (let i = 0; i < result.pages.length; i++) {
-        await tx.insert(storyPages).values({
+        tx.insert(storyPages).values({
           id: generateId(),
           storyId: id,
           pageNumber: i + 1,
@@ -71,7 +71,7 @@ export async function POST(
         });
       }
 
-      await tx
+      tx
         .update(stories)
         .set({
           status: "text_ready",
