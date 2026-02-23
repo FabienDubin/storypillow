@@ -116,11 +116,15 @@ export default function ReadPage({
     <div
       className={`min-h-screen ${bgColor} ${textColor} flex flex-col select-none`}
     >
-      {/* Top bar — minimal */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-4 opacity-0 hover:opacity-100 transition-opacity duration-300">
+      {/* Top bar — always visible, subtle */}
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-4">
         <button
           onClick={() => router.push("/")}
-          className={`${subtitleColor} hover:${textColor} font-sans text-sm transition-colors cursor-pointer`}
+          className={`font-sans text-sm transition-colors cursor-pointer ${
+            darkMode
+              ? "text-cream/60 hover:text-cream"
+              : "text-[#1a1a2e]/60 hover:text-[#1a1a2e]"
+          }`}
         >
           ← Retour
         </button>
@@ -129,18 +133,15 @@ export default function ReadPage({
         </span>
         <button
           onClick={() => setDarkMode(!darkMode)}
-          className={`${subtitleColor} hover:${textColor} font-sans text-sm transition-colors cursor-pointer`}
+          className={`font-sans text-sm transition-colors cursor-pointer ${
+            darkMode
+              ? "text-cream/60 hover:text-cream"
+              : "text-[#1a1a2e]/60 hover:text-[#1a1a2e]"
+          }`}
         >
           {darkMode ? "☀️ Clair" : "🌙 Sombre"}
         </button>
       </div>
-
-      {/* Cover page */}
-      {isFirstPage && currentPage === 0 && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-8">
-          {/* Show cover only if we're on "page 0" conceptually — we use the first page */}
-        </div>
-      )}
 
       {/* Main content */}
       <div className="flex-1 flex flex-col">

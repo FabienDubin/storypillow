@@ -21,6 +21,6 @@ export function getTextModel() {
 
 export function getImageModel() {
   return getGenAI().getGenerativeModel({
-    model: "gemini-2.5-flash-preview-04-17",
+    model: "gemini-2.5-flash-image",
   });
 }

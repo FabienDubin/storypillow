@@ -5,6 +5,7 @@ FROM base AS deps
 WORKDIR /app
 
 COPY package.json package-lock.json ./
+RUN apk add --no-cache python3 make g++
 RUN npm ci
 
 # Rebuild the source code only when needed

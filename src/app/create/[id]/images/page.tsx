@@ -171,7 +171,12 @@ export default function ImagesPage({
     }
   }
 
-  function handleFinish() {
+  async function handleFinish() {
+    await fetch(`/api/stories/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "complete" }),
+    });
     router.push(`/read/${id}`);
   }
 
