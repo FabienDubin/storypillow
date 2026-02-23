@@ -32,7 +32,7 @@ export async function POST(
     return NextResponse.json({ error: "Story not found" }, { status: 404 });
   }
 
-  if (story.status !== "text_ready") {
+  if (story.status !== "text_ready" && story.status !== "characters_ready") {
     return NextResponse.json(
       { error: "Les personnages ne peuvent être extraits qu'après génération du texte." },
       { status: 400 }

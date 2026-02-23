@@ -17,7 +17,7 @@ export async function POST(
     return NextResponse.json({ error: "Story not found" }, { status: 404 });
   }
 
-  if (story.status !== "plan_ready") {
+  if (story.status !== "plan_ready" && story.status !== "text_ready") {
     return NextResponse.json(
       { error: "Le texte ne peut être généré qu'après validation du plan." },
       { status: 400 }

@@ -16,7 +16,7 @@ export async function POST(
     return NextResponse.json({ error: "Story not found" }, { status: 404 });
   }
 
-  if (story.status !== "draft") {
+  if (story.status !== "draft" && story.status !== "plan_ready") {
     return NextResponse.json(
       { error: "Le plan ne peut être généré que pour une histoire en brouillon." },
       { status: 400 }
