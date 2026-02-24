@@ -32,20 +32,27 @@ export async function generateIllustration(
   imagePrompt: string,
   storyId: string,
   pageId: string,
-  referenceImages: { mimeType: string; data: string }[] = []
+  referenceImages: { name: string; description: string; mimeType: string; data: string }[] = []
 ): Promise<string> {
   const model = getImageModel();
 
   const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
 
-  // Add reference images first (for character consistency)
-  for (const ref of referenceImages) {
-    parts.push({
-      inlineData: {
-        mimeType: ref.mimeType,
-        data: ref.data,
-      },
-    });
+  // Add labeled reference images for character consistency
+  if (referenceImages.length > 0) {
+    parts.push({ text: "Here are the character reference images for this story. Use them to maintain consistent character appearance in the illustration.\n" });
+
+    for (const ref of referenceImages) {
+      parts.push({ text: `Character "${ref.name}" (${ref.description}):` });
+      parts.push({
+        inlineData: {
+          mimeType: ref.mimeType,
+          data: ref.data,
+        },
+      });
+    }
+
+    parts.push({ text: "\nNow generate the following scene illustration. Make sure each character matches their reference image above exactly (same face, skin color, hair, clothing, gender).\n" });
   }
 
   // Add the prompt

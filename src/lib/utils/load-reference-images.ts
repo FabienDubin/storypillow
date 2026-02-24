@@ -4,9 +4,9 @@ import path from "path";
 const ALLOWED_DIRS = ["uploads", "generated", "library"];
 
 export function loadReferenceImages(
-  chars: Array<{ referenceImagePath: string | null }>
-): { mimeType: string; data: string }[] {
-  const referenceImages: { mimeType: string; data: string }[] = [];
+  chars: Array<{ name: string; description: string; referenceImagePath: string | null }>
+): { name: string; description: string; mimeType: string; data: string }[] {
+  const referenceImages: { name: string; description: string; mimeType: string; data: string }[] = [];
   const cwd = process.cwd();
 
   for (const char of chars) {
@@ -30,7 +30,7 @@ export function loadReferenceImages(
     else if (ext === ".webp") mimeType = "image/webp";
     else if (ext === ".gif") mimeType = "image/gif";
 
-    referenceImages.push({ mimeType, data });
+    referenceImages.push({ name: char.name, description: char.description, mimeType, data });
   }
 
   return referenceImages;
