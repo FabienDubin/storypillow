@@ -75,6 +75,18 @@ export const characters = sqliteTable("characters", {
   description: text("description").notNull(),
   referenceImagePath: text("reference_image_path"),
   isUploaded: integer("is_uploaded", { mode: "boolean" }).default(false),
+  libraryCharacterId: text("library_character_id"),
+  createdAt: text("created_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+});
+
+export const characterLibrary = sqliteTable("character_library", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  imagePath: text("image_path"),
+  sourceStoryId: text("source_story_id"),
   createdAt: text("created_at")
     .notNull()
     .$defaultFn(() => new Date().toISOString()),

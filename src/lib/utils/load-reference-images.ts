@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-const ALLOWED_DIRS = ["uploads", "generated"];
+const ALLOWED_DIRS = ["uploads", "generated", "library"];
 
 export function loadReferenceImages(
   chars: Array<{ referenceImagePath: string | null }>

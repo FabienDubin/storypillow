@@ -59,6 +59,16 @@ export interface Character {
   description: string;
   referenceImagePath: string | null;
   isUploaded: boolean;
+  libraryCharacterId: string | null;
+  createdAt: string;
+}
+
+export interface LibraryCharacter {
+  id: string;
+  name: string;
+  description: string;
+  imagePath: string | null;
+  sourceStoryId: string | null;
   createdAt: string;
 }
 

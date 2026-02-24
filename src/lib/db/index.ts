@@ -90,6 +90,17 @@ function initializeDatabase() {
     );
   `);
 
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS character_library (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT NOT NULL,
+      image_path TEXT,
+      source_story_id TEXT,
+      created_at TEXT NOT NULL
+    );
+  `);
+
   // Migrations for existing databases
   const storyCols = sqlite.pragma("table_info(stories)") as { name: string }[];
   if (!storyCols.some((c) => c.name === "created_by")) {
@@ -98,6 +109,10 @@ function initializeDatabase() {
   const userCols = sqlite.pragma("table_info(users)") as { name: string }[];
   if (!userCols.some((c) => c.name === "password_changed_at")) {
     sqlite.exec("ALTER TABLE users ADD COLUMN password_changed_at TEXT NOT NULL DEFAULT ''");
+  }
+  const charCols = sqlite.pragma("table_info(characters)") as { name: string }[];
+  if (!charCols.some((c) => c.name === "library_character_id")) {
+    sqlite.exec("ALTER TABLE characters ADD COLUMN library_character_id TEXT");
   }
 
   // Seed admin account if no users exist

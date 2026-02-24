@@ -7,7 +7,8 @@ import StarField from "@/components/ui/StarField";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import StepIndicator from "@/components/story/StepIndicator";
-import type { Character } from "@/types";
+import CharacterLibraryModal from "@/components/story/CharacterLibraryModal";
+import type { Character, LibraryCharacter } from "@/types";
 
 const STEP_LABELS = [
   "Thème",
@@ -28,6 +29,9 @@ export default function CharactersPage({
   const [extracting, setExtracting] = useState(false);
   const [extracted, setExtracted] = useState(false);
   const [generatingImage, setGeneratingImage] = useState<string | null>(null);
+  const [savingToLibrary, setSavingToLibrary] = useState<string | null>(null);
+  const [savedToLibrary, setSavedToLibrary] = useState<Set<string>>(new Set());
+  const [libraryModalFor, setLibraryModalFor] = useState<string | null>(null);
   const [error, setError] = useState("");
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -86,7 +90,7 @@ export default function CharactersPage({
       setCharacters((prev) =>
         prev.map((c) =>
           c.id === characterId
-            ? { ...c, referenceImagePath: data.imagePath, isUploaded: false }
+            ? { ...c, referenceImagePath: data.imagePath, isUploaded: false, libraryCharacterId: null }
             : c
         )
       );
@@ -115,7 +119,7 @@ export default function CharactersPage({
       setCharacters((prev) =>
         prev.map((c) =>
           c.id === characterId
-            ? { ...c, referenceImagePath: data.imagePath, isUploaded: true }
+            ? { ...c, referenceImagePath: data.imagePath, isUploaded: true, libraryCharacterId: null }
             : c
         )
       );
@@ -140,6 +144,73 @@ export default function CharactersPage({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ description }),
     });
+  }
+
+  async function handleSaveToLibrary(characterId: string) {
+    setSavingToLibrary(characterId);
+
+    try {
+      const res = await fetch("/api/characters/library", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ characterId }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Erreur");
+      }
+
+      setSavedToLibrary((prev) => new Set(prev).add(characterId));
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Erreur de sauvegarde"
+      );
+    } finally {
+      setSavingToLibrary(null);
+    }
+  }
+
+  async function handleUseLibraryCharacter(
+    characterId: string,
+    libChar: LibraryCharacter
+  ) {
+    setLibraryModalFor(null);
+
+    try {
+      const res = await fetch(
+        `/api/characters/${characterId}/use-library`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ libraryCharacterId: libChar.id }),
+        }
+      );
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Erreur");
+      }
+
+      const data = await res.json();
+      setCharacters((prev) =>
+        prev.map((c) =>
+          c.id === characterId
+            ? {
+                ...c,
+                referenceImagePath: data.imagePath,
+                description: data.description,
+                isUploaded: false,
+                libraryCharacterId: data.libraryCharacterId,
+              }
+            : c
+        )
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Erreur d'application du personnage"
+      );
+    }
   }
 
   async function handleValidate() {
@@ -213,7 +284,7 @@ export default function CharactersPage({
                           <span className="text-3xl">👤</span>
                         )}
                       </div>
-                      <div className="flex gap-2 mt-2">
+                      <div className="flex gap-1.5 mt-2">
                         <Button
                           variant="secondary"
                           size="sm"
@@ -242,13 +313,47 @@ export default function CharactersPage({
                           }}
                         />
                       </div>
+                      <div className="flex gap-1.5 mt-1.5">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setLibraryModalFor(char.id)}
+                          className="flex-1 text-xs border border-purple/20"
+                        >
+                          📚 Bibliothèque
+                        </Button>
+                      </div>
+                      {/* Save to library button — visible only when character has an image */}
+                      {char.referenceImagePath && (
+                        <div className="mt-1.5">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSaveToLibrary(char.id)}
+                            loading={savingToLibrary === char.id}
+                            disabled={savedToLibrary.has(char.id)}
+                            className="w-full text-xs border border-gold/20 text-gold/70 hover:text-gold"
+                          >
+                            {savedToLibrary.has(char.id)
+                              ? "Sauvegardé ✓"
+                              : "Sauvegarder en bibliothèque"}
+                          </Button>
+                        </div>
+                      )}
                     </div>
 
                     {/* Character details */}
                     <div className="flex-1">
-                      <h3 className="font-sans font-semibold text-cream text-lg mb-2">
-                        {char.name}
-                      </h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-sans font-semibold text-cream text-lg">
+                          {char.name}
+                        </h3>
+                        {char.libraryCharacterId && (
+                          <span className="text-xs bg-purple/30 text-purple-light px-2 py-0.5 rounded-full font-sans">
+                            depuis bibliothèque
+                          </span>
+                        )}
+                      </div>
                       <textarea
                         value={char.description}
                         onChange={(e) =>
@@ -274,6 +379,17 @@ export default function CharactersPage({
           </>
         ) : null}
       </main>
+
+      {/* Library modal — one instance, opens for the character being edited */}
+      <CharacterLibraryModal
+        open={libraryModalFor !== null}
+        onClose={() => setLibraryModalFor(null)}
+        onSelect={(libChar) => {
+          if (libraryModalFor) {
+            handleUseLibraryCharacter(libraryModalFor, libChar);
+          }
+        }}
+      />
     </div>
   );
 }

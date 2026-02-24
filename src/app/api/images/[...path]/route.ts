@@ -10,8 +10,12 @@ export async function GET(
   const { path: pathParts } = await params;
   const relativePath = pathParts.join("/");
 
-  // Only allow serving from uploads/ and generated/ directories
-  if (!relativePath.startsWith("uploads/") && !relativePath.startsWith("generated/")) {
+  // Only allow serving from uploads/, generated/, and library/ directories
+  if (
+    !relativePath.startsWith("uploads/") &&
+    !relativePath.startsWith("generated/") &&
+    !relativePath.startsWith("library/")
+  ) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
