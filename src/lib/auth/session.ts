@@ -1,104 +1,36 @@
 import { cookies } from "next/headers";
+import { SignJWT, jwtVerify } from "jose";
 import type { SessionPayload } from "@/types";
 
 const SESSION_COOKIE = "sp_session";
 const MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
-function getSecret(): string {
+function getSecretKey(): Uint8Array {
   const secret = process.env.AUTH_SECRET;
   if (!secret) {
     throw new Error("AUTH_SECRET environment variable is required");
   }
-  return secret;
-}
-
-// Encode payload to base64url
-function base64url(data: string): string {
-  return Buffer.from(data).toString("base64url");
-}
-
-// Decode base64url to string
-function fromBase64url(data: string): string {
-  return Buffer.from(data, "base64url").toString();
-}
-
-// Create HMAC signature using Web Crypto API compatible approach
-async function sign(data: string, secret: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const signature = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    encoder.encode(data)
-  );
-  return Buffer.from(signature).toString("base64url");
-}
-
-// Verify HMAC signature
-async function verify(
-  data: string,
-  signature: string,
-  secret: string
-): Promise<boolean> {
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["verify"]
-  );
-  const sigBuffer = Buffer.from(signature, "base64url");
-  return crypto.subtle.verify(
-    "HMAC",
-    key,
-    sigBuffer,
-    encoder.encode(data)
-  );
-}
-
-interface TokenPayload extends SessionPayload {
-  exp: number;
+  return new TextEncoder().encode(secret);
 }
 
 export async function createToken(payload: SessionPayload): Promise<string> {
-  const secret = getSecret();
-  const header = base64url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
-  const tokenPayload: TokenPayload = {
-    ...payload,
-    exp: Math.floor(Date.now() / 1000) + MAX_AGE,
-  };
-  const body = base64url(JSON.stringify(tokenPayload));
-  const data = `${header}.${body}`;
-  const sig = await sign(data, secret);
-  return `${data}.${sig}`;
+  return new SignJWT({ ...payload })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime(`${MAX_AGE}s`)
+    .sign(getSecretKey());
 }
 
 export async function verifyToken(
   token: string
 ): Promise<SessionPayload | null> {
   try {
-    const secret = getSecret();
-    const [header, body, sig] = token.split(".");
-    if (!header || !body || !sig) return null;
-
-    const valid = await verify(`${header}.${body}`, sig, secret);
-    if (!valid) return null;
-
-    const payload: TokenPayload = JSON.parse(fromBase64url(body));
-    if (payload.exp < Math.floor(Date.now() / 1000)) return null;
-
+    const { payload } = await jwtVerify(token, getSecretKey());
     return {
-      userId: payload.userId,
-      email: payload.email,
-      name: payload.name,
-      role: payload.role,
+      userId: payload.userId as string,
+      email: payload.email as string,
+      name: payload.name as string,
+      role: payload.role as "admin" | "user",
+      passwordChangedAt: payload.passwordChangedAt as string,
     };
   } catch {
     return null;
@@ -117,11 +49,43 @@ export async function createSession(payload: SessionPayload): Promise<void> {
   });
 }
 
+/** Decode token from cookie (no DB check — use getVerifiedSession for full validation) */
 export async function getSession(): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) return null;
   return verifyToken(token);
+}
+
+/**
+ * Decode token AND verify against DB that user still exists
+ * and password hasn't changed since token was issued.
+ * Use this in API routes for full session validation.
+ */
+export async function getVerifiedSession(): Promise<SessionPayload | null> {
+  const session = await getSession();
+  if (!session) return null;
+
+  // Lazy import to avoid circular dependency
+  const { db, schema } = await import("@/lib/db");
+  const { eq } = await import("drizzle-orm");
+
+  const user = db
+    .select({
+      id: schema.users.id,
+      passwordChangedAt: schema.users.passwordChangedAt,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.id, session.userId))
+    .get();
+
+  // User deleted
+  if (!user) return null;
+
+  // Password was changed after token was issued
+  if (user.passwordChangedAt !== session.passwordChangedAt) return null;
+
+  return session;
 }
 
 export async function deleteSession(): Promise<void> {

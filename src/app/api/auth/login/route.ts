@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
       email: user.email,
       name: user.name,
       role: user.role as "admin" | "user",
+      passwordChangedAt: user.passwordChangedAt,
     });
 
     return NextResponse.json({

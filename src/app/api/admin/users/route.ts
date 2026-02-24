@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, schema } from "@/lib/db";
-import { getSession } from "@/lib/auth/session";
+import { requireAdmin } from "@/lib/auth/require-admin";
 import { hashPassword } from "@/lib/auth/password";
 import { v4 as uuid } from "uuid";
 import { eq } from "drizzle-orm";
-
-async function requireAdmin() {
-  const session = await getSession();
-  if (!session || session.role !== "admin") {
-    return null;
-  }
-  return session;
-}
 
 export async function GET() {
   const admin = await requireAdmin();
@@ -51,6 +43,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: "Le mot de passe doit contenir au moins 8 caractères" },
+        { status: 400 }
+      );
+    }
+
     const validRole = role === "admin" ? "admin" : "user";
 
     // Check if email already exists
@@ -78,6 +77,7 @@ export async function POST(request: NextRequest) {
         name,
         passwordHash,
         role: validRole,
+        passwordChangedAt: now,
         createdAt: now,
         updatedAt: now,
       })

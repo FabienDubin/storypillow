@@ -46,6 +46,7 @@ function initializeDatabase() {
       name TEXT NOT NULL,
       password_hash TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'user',
+      password_changed_at TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -93,23 +94,41 @@ function initializeDatabase() {
     .prepare("SELECT COUNT(*) as count FROM users")
     .get() as { count: number };
   if (userCount.count === 0) {
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!adminEmail || !adminPassword) {
+      console.warn(
+        "No users in database. Set ADMIN_EMAIL and ADMIN_PASSWORD env vars to seed an admin account."
+      );
+      return;
+    }
+
+    if (adminPassword.length < 8) {
+      console.warn(
+        "ADMIN_PASSWORD must be at least 8 characters. Skipping admin seed."
+      );
+      return;
+    }
+
     const now = new Date().toISOString();
     const adminId = crypto.randomUUID();
-    const passwordHash = hashPasswordSync("admin");
+    const passwordHash = hashPasswordSync(adminPassword);
     sqlite
       .prepare(
-        "INSERT INTO users (id, email, name, password_hash, role, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        "INSERT INTO users (id, email, name, password_hash, role, password_changed_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
       )
       .run(
         adminId,
-        "fabien.dubin@gmail.com",
-        "Fabien",
+        adminEmail.toLowerCase().trim(),
+        "Admin",
         passwordHash,
         "admin",
         now,
+        now,
         now
       );
-    console.log("Admin account seeded: fabien.dubin@gmail.com / admin");
+    console.log(`Admin account seeded for ${adminEmail}`);
   }
 }
 

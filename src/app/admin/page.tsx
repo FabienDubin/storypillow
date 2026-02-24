@@ -93,8 +93,17 @@ export default function AdminPage() {
   async function handleDelete(id: string, email: string) {
     if (!confirm(`Supprimer le compte de ${email} ?`)) return;
 
-    await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
-    loadUsers();
+    try {
+      const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || "Erreur lors de la suppression");
+        return;
+      }
+      loadUsers();
+    } catch {
+      alert("Erreur serveur");
+    }
   }
 
   async function handleUpdate(id: string) {
@@ -104,15 +113,25 @@ export default function AdminPage() {
     };
     if (editPassword) body.password = editPassword;
 
-    await fetch(`/api/admin/users/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    try {
+      const res = await fetch(`/api/admin/users/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
 
-    setEditingId(null);
-    setEditPassword("");
-    loadUsers();
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || "Erreur lors de la mise à jour");
+        return;
+      }
+
+      setEditingId(null);
+      setEditPassword("");
+      loadUsers();
+    } catch {
+      alert("Erreur serveur");
+    }
   }
 
   function startEdit(user: UserEntry) {

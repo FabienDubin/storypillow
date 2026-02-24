@@ -1,16 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, schema } from "@/lib/db";
-import { getSession } from "@/lib/auth/session";
+import { requireAdmin } from "@/lib/auth/require-admin";
 import { hashPassword } from "@/lib/auth/password";
 import { eq } from "drizzle-orm";
-
-async function requireAdmin() {
-  const session = await getSession();
-  if (!session || session.role !== "admin") {
-    return null;
-  }
-  return session;
-}
 
 export async function PUT(
   request: NextRequest,
@@ -30,10 +22,24 @@ export async function PUT(
     if (body.name) updates.name = body.name;
     if (body.email) updates.email = body.email.toLowerCase().trim();
     if (body.role && (body.role === "admin" || body.role === "user")) {
+      // Prevent admin from demoting themselves
+      if (admin.userId === id && body.role !== "admin") {
+        return NextResponse.json(
+          { error: "Impossible de modifier votre propre rôle" },
+          { status: 400 }
+        );
+      }
       updates.role = body.role;
     }
     if (body.password) {
+      if (body.password.length < 8) {
+        return NextResponse.json(
+          { error: "Le mot de passe doit contenir au moins 8 caractères" },
+          { status: 400 }
+        );
+      }
       updates.passwordHash = await hashPassword(body.password);
+      updates.passwordChangedAt = new Date().toISOString();
     }
 
     updates.updatedAt = new Date().toISOString();
