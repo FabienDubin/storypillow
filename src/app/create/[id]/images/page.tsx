@@ -28,6 +28,7 @@ export default function ImagesPage({
   const [loading, setLoading] = useState(true);
   const [generatingAll, setGeneratingAll] = useState(false);
   const [generatingPages, setGeneratingPages] = useState<Set<string>>(new Set());
+  const [generatingPrompts, setGeneratingPrompts] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -51,14 +52,17 @@ export default function ImagesPage({
   }, [id]);
 
   async function generatePrompts() {
+    setGeneratingPrompts(true);
+    setError("");
+
     try {
       const res = await fetch(`/api/stories/${id}/generate-prompts`, {
         method: "POST",
       });
 
       if (!res.ok) {
-        // Fallback: use simple client-side prompts
-        console.error("AI prompt generation failed, using fallback");
+        const data = await res.json().catch(() => null);
+        setError(data?.error || "Échec de la génération des prompts");
         return;
       }
 
@@ -67,7 +71,11 @@ export default function ImagesPage({
         setPages(data.pages);
       }
     } catch (err) {
-      console.error("Error generating prompts:", err);
+      setError(
+        err instanceof Error ? err.message : "Erreur lors de la génération des prompts"
+      );
+    } finally {
+      setGeneratingPrompts(false);
     }
   }
 
@@ -223,9 +231,17 @@ export default function ImagesPage({
           </div>
           <div className="flex gap-3">
             <Button
+              variant="secondary"
+              onClick={generatePrompts}
+              loading={generatingPrompts}
+              disabled={generatingPrompts || generatingAll}
+            >
+              Régénérer les prompts
+            </Button>
+            <Button
               onClick={handleGenerateAll}
               loading={generatingAll}
-              disabled={generatingAll}
+              disabled={generatingAll || generatingPrompts}
             >
               Générer toutes les images
             </Button>
@@ -235,6 +251,15 @@ export default function ImagesPage({
         {error && (
           <Card className="mb-6 border-red-500/30">
             <p className="text-red-400 font-sans">{error}</p>
+          </Card>
+        )}
+
+        {generatingPrompts && (
+          <Card className="mb-6 text-center py-8">
+            <div className="spinner h-8 w-8 border-2 border-gold/30 border-t-gold rounded-full mx-auto mb-3" />
+            <p className="text-cream/60 font-sans text-sm">
+              Génération des prompts en cours...
+            </p>
           </Card>
         )}
 

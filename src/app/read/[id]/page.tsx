@@ -122,10 +122,10 @@ export default function ReadPage({
 
   return (
     <div
-      className={`min-h-screen ${bgColor} ${textColor} flex flex-col select-none`}
+      className={`min-h-screen landscape:min-h-0 landscape:h-dvh ${bgColor} ${textColor} flex flex-col select-none landscape:overflow-hidden`}
     >
       {/* Top bar — always visible, subtle */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-4">
+      <div className="shrink-0 flex items-center justify-between px-6 py-3 z-20">
         <button
           onClick={() => router.push("/")}
           className={`font-sans text-sm transition-colors cursor-pointer ${
@@ -151,16 +151,19 @@ export default function ReadPage({
         </button>
       </div>
 
-      {/* Main content — fade transition between pages */}
-      <div className="flex-1 flex flex-col pt-12 transition-opacity duration-300" key={currentPage}>
-        {/* Illustration */}
-        <div className="flex-1 relative overflow-hidden min-h-[40vh]">
+      {/* Main content — portrait: scrollable stacked, landscape: side by side locked */}
+      <div
+        className="flex-1 landscape:min-h-0 flex flex-col landscape:flex-row transition-opacity duration-300"
+        key={currentPage}
+      >
+        {/* Illustration — portrait: full height with side margins, landscape: half-width */}
+        <div className="flex-1 landscape:flex-none relative overflow-hidden min-h-[40vh] px-12 landscape:px-0 landscape:w-1/2">
           {page.imagePath ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={`/api/images/${page.imagePath.replace(/^\//, "")}`}
               alt={page.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover rounded-2xl landscape:rounded-none"
             />
           ) : (
             <div
@@ -172,33 +175,35 @@ export default function ReadPage({
             </div>
           )}
 
-          {/* Gradient overlay for text readability */}
+          {/* Gradient overlay — portrait only */}
           <div
-            className={`absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t ${
+            className={`absolute bottom-0 left-0 right-0 h-32 landscape:hidden bg-gradient-to-t ${
               darkMode ? "from-[#1a1a2e]" : "from-cream"
             } to-transparent`}
           />
         </div>
 
-        {/* Text section */}
-        <div className="px-8 py-8 md:px-16 lg:px-24 max-w-4xl mx-auto w-full">
-          <h2
-            className={`font-sans font-bold text-lg mb-4 ${
-              darkMode ? "text-gold" : "text-purple"
-            }`}
-          >
-            {page.title}
-          </h2>
-          <div
-            className={`font-serif text-xl md:text-2xl leading-relaxed ${textColor} whitespace-pre-line`}
-          >
-            {page.text}
+        {/* Text section — portrait: normal flow, landscape: scrollable within bounds */}
+        <div className="landscape:flex-1 landscape:min-h-0 landscape:overflow-y-auto landscape:w-1/2">
+          <div className="px-8 py-8 md:px-16 lg:px-24 landscape:px-8 landscape:md:px-12 landscape:min-h-full landscape:flex landscape:flex-col landscape:justify-center">
+            <h2
+              className={`font-sans font-bold text-lg mb-4 ${
+                darkMode ? "text-gold" : "text-purple"
+              }`}
+            >
+              {page.title}
+            </h2>
+            <div
+              className={`font-serif text-xl md:text-2xl leading-relaxed ${textColor} whitespace-pre-line`}
+            >
+              {page.text}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Navigation buttons */}
-      <div className="flex items-center justify-between px-8 py-6">
+      <div className="shrink-0 flex items-center justify-between px-8 py-4">
         <button
           onClick={goPrev}
           disabled={isFirstPage}
