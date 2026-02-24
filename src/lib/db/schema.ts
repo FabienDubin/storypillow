@@ -22,6 +22,7 @@ export const users = sqliteTable("users", {
 export const stories = sqliteTable("stories", {
   id: text("id").primaryKey(),
   title: text("title").notNull().default(""),
+  createdBy: text("created_by").references(() => users.id),
   theme: text("theme").notNull(),
   setting: text("setting").notNull(),
   tone: text("tone").notNull(),

@@ -54,6 +54,7 @@ function initializeDatabase() {
     CREATE TABLE IF NOT EXISTS stories (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL DEFAULT '',
+      created_by TEXT REFERENCES users(id),
       theme TEXT NOT NULL,
       setting TEXT NOT NULL,
       tone TEXT NOT NULL,
@@ -88,6 +89,16 @@ function initializeDatabase() {
       created_at TEXT NOT NULL
     );
   `);
+
+  // Migrations for existing databases
+  const storyCols = sqlite.pragma("table_info(stories)") as { name: string }[];
+  if (!storyCols.some((c) => c.name === "created_by")) {
+    sqlite.exec("ALTER TABLE stories ADD COLUMN created_by TEXT REFERENCES users(id)");
+  }
+  const userCols = sqlite.pragma("table_info(users)") as { name: string }[];
+  if (!userCols.some((c) => c.name === "password_changed_at")) {
+    sqlite.exec("ALTER TABLE users ADD COLUMN password_changed_at TEXT NOT NULL DEFAULT ''");
+  }
 
   // Seed admin account if no users exist
   const userCount = sqlite

@@ -9,6 +9,11 @@ import Button from "@/components/ui/Button";
 import { formatDate } from "@/lib/utils";
 import type { Story } from "@/types";
 
+interface StoryWithMeta extends Story {
+  creatorName: string | null;
+  coverImage: string | null;
+}
+
 const STATUS_LABELS: Record<string, string> = {
   draft: "Brouillon",
   plan_ready: "Plan prêt",
@@ -20,7 +25,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [stories, setStories] = useState<Story[]>([]);
+  const [stories, setStories] = useState<StoryWithMeta[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,7 +42,7 @@ export default function DashboardPage() {
     router.push("/create/new");
   }
 
-  function handleOpenStory(story: Story) {
+  function handleOpenStory(story: StoryWithMeta) {
     if (story.status === "complete") {
       router.push(`/read/${story.id}`);
     } else {
@@ -71,7 +76,7 @@ export default function DashboardPage() {
               Bibliothèque
             </h1>
             <p className="text-cream/60 mt-1 font-sans">
-              Vos histoires illustrées
+              Toutes les histoires illustrées
             </p>
           </div>
           <Button onClick={handleCreateNew} size="lg">
@@ -105,7 +110,13 @@ export default function DashboardPage() {
                 className="group"
               >
                 <div className="aspect-[4/3] bg-navy/60 rounded-xl mb-4 flex items-center justify-center overflow-hidden">
-                  {story.status === "complete" ? (
+                  {story.coverImage ? (
+                    <img
+                      src={`/api/images/${story.coverImage}`}
+                      alt={story.title || "Couverture"}
+                      className="w-full h-full object-cover rounded-xl"
+                    />
+                  ) : story.status === "complete" ? (
                     <div className="text-6xl">📖</div>
                   ) : (
                     <div className="text-4xl opacity-40">✏️</div>
@@ -123,12 +134,15 @@ export default function DashboardPage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between mt-3">
-                  <span className="text-sm text-cream/50 font-sans">
-                    {story.childName} &middot; {story.duration} min
+                  <span className="text-sm text-cream/50 font-sans truncate">
+                    {story.childName}
+                    {story.creatorName && (
+                      <> &middot; par {story.creatorName}</>
+                    )}
                   </span>
                   <button
                     onClick={(e) => handleDelete(e, story.id)}
-                    className="text-red-400/50 hover:text-red-400 text-sm font-sans transition-colors cursor-pointer"
+                    className="text-red-400/50 hover:text-red-400 text-sm font-sans transition-colors cursor-pointer shrink-0 ml-2"
                   >
                     Supprimer
                   </button>

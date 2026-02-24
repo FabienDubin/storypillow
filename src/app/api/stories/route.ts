@@ -1,16 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { stories } from "@/lib/db/schema";
+import { stories, storyPages, users } from "@/lib/db/schema";
 import { generateId } from "@/lib/utils";
-import { desc } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { createStorySchema, parseBody } from "@/lib/validations";
+import { getVerifiedSession } from "@/lib/auth/session";
 
-// GET /api/stories — List all stories
+// GET /api/stories — List all stories with creator name and first page image
 export async function GET() {
-  const allStories = await db
-    .select()
+  const allStories = db
+    .select({
+      id: stories.id,
+      title: stories.title,
+      theme: stories.theme,
+      setting: stories.setting,
+      tone: stories.tone,
+      moral: stories.moral,
+      duration: stories.duration,
+      childName: stories.childName,
+      context: stories.context,
+      plan: stories.plan,
+      status: stories.status,
+      createdBy: stories.createdBy,
+      createdAt: stories.createdAt,
+      updatedAt: stories.updatedAt,
+      creatorName: users.name,
+      coverImage: sql<string | null>`(
+        SELECT ${storyPages.imagePath} FROM ${storyPages}
+        WHERE ${storyPages.storyId} = ${stories.id}
+        ORDER BY ${storyPages.pageNumber} ASC
+        LIMIT 1
+      )`,
+    })
     .from(stories)
-    .orderBy(desc(stories.createdAt));
+    .leftJoin(users, eq(stories.createdBy, users.id))
+    .orderBy(desc(stories.createdAt))
+    .all();
 
   const mapped = allStories.map((s) => ({
     ...s,
@@ -22,6 +47,8 @@ export async function GET() {
 
 // POST /api/stories — Create a new story
 export async function POST(request: NextRequest) {
+  const session = await getVerifiedSession();
+
   let body: unknown;
   try {
     body = await request.json();
@@ -40,6 +67,7 @@ export async function POST(request: NextRequest) {
   await db.insert(stories).values({
     id,
     title: "",
+    createdBy: session?.userId ?? null,
     theme: parsed.data.theme,
     setting: parsed.data.setting,
     tone: parsed.data.tone,
