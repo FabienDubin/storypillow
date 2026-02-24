@@ -86,11 +86,10 @@ function initializeDatabase() {
       description TEXT NOT NULL,
       reference_image_path TEXT,
       is_uploaded INTEGER DEFAULT 0,
+      library_character_id TEXT,
       created_at TEXT NOT NULL
     );
-  `);
 
-  sqlite.exec(`
     CREATE TABLE IF NOT EXISTS character_library (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -101,18 +100,22 @@ function initializeDatabase() {
     );
   `);
 
-  // Migrations for existing databases
-  const storyCols = sqlite.pragma("table_info(stories)") as { name: string }[];
-  if (!storyCols.some((c) => c.name === "created_by")) {
-    sqlite.exec("ALTER TABLE stories ADD COLUMN created_by TEXT REFERENCES users(id)");
-  }
-  const userCols = sqlite.pragma("table_info(users)") as { name: string }[];
-  if (!userCols.some((c) => c.name === "password_changed_at")) {
-    sqlite.exec("ALTER TABLE users ADD COLUMN password_changed_at TEXT NOT NULL DEFAULT ''");
-  }
-  const charCols = sqlite.pragma("table_info(characters)") as { name: string }[];
-  if (!charCols.some((c) => c.name === "library_character_id")) {
-    sqlite.exec("ALTER TABLE characters ADD COLUMN library_character_id TEXT");
+  // Migrations for existing databases (wrapped in try-catch for concurrent workers)
+  try {
+    const storyCols = sqlite.pragma("table_info(stories)") as { name: string }[];
+    if (!storyCols.some((c) => c.name === "created_by")) {
+      sqlite.exec("ALTER TABLE stories ADD COLUMN created_by TEXT REFERENCES users(id)");
+    }
+    const userCols = sqlite.pragma("table_info(users)") as { name: string }[];
+    if (!userCols.some((c) => c.name === "password_changed_at")) {
+      sqlite.exec("ALTER TABLE users ADD COLUMN password_changed_at TEXT NOT NULL DEFAULT ''");
+    }
+    const charCols = sqlite.pragma("table_info(characters)") as { name: string }[];
+    if (!charCols.some((c) => c.name === "library_character_id")) {
+      sqlite.exec("ALTER TABLE characters ADD COLUMN library_character_id TEXT");
+    }
+  } catch {
+    // Migrations may fail if another worker already applied them — safe to ignore
   }
 
   // Seed admin account if no users exist
