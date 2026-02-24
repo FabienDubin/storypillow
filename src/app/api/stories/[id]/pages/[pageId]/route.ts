@@ -11,7 +11,7 @@ export async function PUT(
 ) {
   const { id, pageId } = await params;
 
-  const page = await db
+  const page = db
     .select()
     .from(storyPages)
     .where(and(eq(storyPages.id, pageId), eq(storyPages.storyId, id)))
@@ -39,7 +39,7 @@ export async function PUT(
   if (parsed.data.imagePrompt !== undefined) updateData.imagePrompt = parsed.data.imagePrompt;
   if (parsed.data.imagePath !== undefined) updateData.imagePath = parsed.data.imagePath;
 
-  await db.update(storyPages).set(updateData).where(eq(storyPages.id, pageId));
+  db.update(storyPages).set(updateData).where(eq(storyPages.id, pageId)).run();
 
   return NextResponse.json({ success: true });
 }

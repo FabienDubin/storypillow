@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
   const id = generateId();
   const now = new Date().toISOString();
 
-  await db.insert(stories).values({
+  db.insert(stories).values({
     id,
     title: "",
     createdBy: session?.userId ?? null,
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     status: "draft",
     createdAt: now,
     updatedAt: now,
-  });
+  }).run();
 
   return NextResponse.json({ id }, { status: 201 });
 }

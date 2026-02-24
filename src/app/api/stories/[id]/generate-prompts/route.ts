@@ -11,25 +11,27 @@ export async function POST(
 ) {
   const { id } = await params;
 
-  const story = await db.select().from(stories).where(eq(stories.id, id)).get();
+  const story = db.select().from(stories).where(eq(stories.id, id)).get();
   if (!story) {
     return NextResponse.json({ error: "Story not found" }, { status: 404 });
   }
 
-  const pages = await db
+  const pages = db
     .select()
     .from(storyPages)
     .where(eq(storyPages.storyId, id))
-    .orderBy(storyPages.pageNumber);
+    .orderBy(storyPages.pageNumber)
+    .all();
 
   if (pages.length === 0) {
     return NextResponse.json({ error: "No pages found" }, { status: 400 });
   }
 
-  const chars = await db
+  const chars = db
     .select()
     .from(characters)
-    .where(eq(characters.storyId, id));
+    .where(eq(characters.storyId, id))
+    .all();
 
   try {
     const prompts = await generateImagePrompts(
@@ -39,18 +41,20 @@ export async function POST(
 
     // Save prompts to pages
     for (let i = 0; i < pages.length && i < prompts.length; i++) {
-      await db
+      db
         .update(storyPages)
         .set({ imagePrompt: prompts[i] })
-        .where(eq(storyPages.id, pages[i].id));
+        .where(eq(storyPages.id, pages[i].id))
+        .run();
     }
 
     // Return updated pages
-    const updatedPages = await db
+    const updatedPages = db
       .select()
       .from(storyPages)
       .where(eq(storyPages.storyId, id))
-      .orderBy(storyPages.pageNumber);
+      .orderBy(storyPages.pageNumber)
+      .all();
 
     return NextResponse.json({ pages: updatedPages });
   } catch (error) {

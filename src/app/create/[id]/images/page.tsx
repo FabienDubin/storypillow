@@ -27,7 +27,7 @@ export default function ImagesPage({
   const [pages, setPages] = useState<StoryPage[]>([]);
   const [loading, setLoading] = useState(true);
   const [generatingAll, setGeneratingAll] = useState(false);
-  const [generatingSingle, setGeneratingSingle] = useState<string | null>(null);
+  const [generatingPages, setGeneratingPages] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -86,7 +86,7 @@ export default function ImagesPage({
   }
 
   async function handleGenerateSingle(pageId: string) {
-    setGeneratingSingle(pageId);
+    setGeneratingPages((prev) => new Set(prev).add(pageId));
     setError("");
 
     try {
@@ -111,7 +111,11 @@ export default function ImagesPage({
         err instanceof Error ? err.message : "Erreur de génération"
       );
     } finally {
-      setGeneratingSingle(null);
+      setGeneratingPages((prev) => {
+        const next = new Set(prev);
+        next.delete(pageId);
+        return next;
+      });
     }
   }
 
@@ -119,44 +123,70 @@ export default function ImagesPage({
     setGeneratingAll(true);
     setError("");
 
-    try {
-      // Save all prompts first
-      for (const page of pages) {
-        if (page.imagePrompt) {
-          await handleSavePrompt(page.id, page.imagePrompt);
-        }
+    const errors: string[] = [];
+
+    // Save all prompts first
+    for (const page of pages) {
+      if (page.imagePrompt) {
+        await handleSavePrompt(page.id, page.imagePrompt);
       }
-
-      const res = await fetch(`/api/stories/${id}/generate-images`, {
-        method: "POST",
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Erreur de génération");
-      }
-
-      const data = await res.json();
-
-      // Update pages with generated images
-      setPages((prev) =>
-        prev.map((p) => {
-          const result = data.results.find(
-            (r: { pageId: string; imagePath: string | null }) => r.pageId === p.id
-          );
-          if (result?.imagePath) {
-            return { ...p, imagePath: result.imagePath };
-          }
-          return p;
-        })
-      );
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Erreur de génération"
-      );
-    } finally {
-      setGeneratingAll(false);
     }
+
+    // Generate each page one by one to avoid timeout
+    for (const page of pages) {
+      if (!page.imagePrompt) continue;
+
+      setGeneratingPages((prev) => new Set(prev).add(page.id));
+
+      try {
+        const res = await fetch(
+          `/api/stories/${id}/pages/${page.id}/generate-image`,
+          { method: "POST" }
+        );
+
+        if (!res.ok) {
+          const data = await res.json();
+          errors.push(`Page ${page.title}: ${data.error || "Erreur"}`);
+          continue;
+        }
+
+        const data = await res.json();
+        setPages((prev) =>
+          prev.map((p) =>
+            p.id === page.id ? { ...p, imagePath: data.imagePath } : p
+          )
+        );
+      } catch (err) {
+        errors.push(
+          `Page ${page.title}: ${err instanceof Error ? err.message : "Erreur"}`
+        );
+      } finally {
+        setGeneratingPages((prev) => {
+          const next = new Set(prev);
+          next.delete(page.id);
+          return next;
+        });
+      }
+    }
+
+    if (errors.length > 0) {
+      setError(errors.join("\n"));
+    }
+
+    // Update story status if all images are generated
+    setPages((prev) => {
+      const allDone = prev.every((p) => p.imagePath);
+      if (allDone) {
+        fetch(`/api/stories/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "complete" }),
+        });
+      }
+      return prev;
+    });
+
+    setGeneratingAll(false);
   }
 
   async function handleFinish() {
@@ -239,7 +269,7 @@ export default function ImagesPage({
                         alt={page.title}
                         className="w-full h-full object-cover"
                       />
-                    ) : generatingSingle === page.id || generatingAll ? (
+                    ) : generatingPages.has(page.id) ? (
                       <div className="text-center">
                         <div className="spinner h-8 w-8 border-2 border-gold/30 border-t-gold rounded-full mx-auto mb-2" />
                         <span className="text-cream/40 font-sans text-sm">
@@ -273,7 +303,7 @@ export default function ImagesPage({
                       variant="secondary"
                       size="sm"
                       onClick={() => handleGenerateSingle(page.id)}
-                      loading={generatingSingle === page.id}
+                      loading={generatingPages.has(page.id)}
                       disabled={generatingAll}
                     >
                       {page.imagePath ? "Régénérer" : "Générer"}

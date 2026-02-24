@@ -12,7 +12,7 @@ export async function POST(
 ) {
   const { id, pageId } = await params;
 
-  const page = await db
+  const page = db
     .select()
     .from(storyPages)
     .where(and(eq(storyPages.id, pageId), eq(storyPages.storyId, id)))
@@ -30,10 +30,11 @@ export async function POST(
   }
 
   // Load character reference images safely
-  const chars = await db
+  const chars = db
     .select()
     .from(characters)
-    .where(eq(characters.storyId, id));
+    .where(eq(characters.storyId, id))
+    .all();
 
   const referenceImages = loadReferenceImages(chars);
 
@@ -45,10 +46,11 @@ export async function POST(
       referenceImages
     );
 
-    await db
+    db
       .update(storyPages)
       .set({ imagePath })
-      .where(eq(storyPages.id, pageId));
+      .where(eq(storyPages.id, pageId))
+      .run();
 
     return NextResponse.json({ imagePath });
   } catch (error) {

@@ -11,22 +11,24 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  const story = await db.select().from(stories).where(eq(stories.id, id)).get();
+  const story = db.select().from(stories).where(eq(stories.id, id)).get();
 
   if (!story) {
     return NextResponse.json({ error: "Story not found" }, { status: 404 });
   }
 
-  const pages = await db
+  const pages = db
     .select()
     .from(storyPages)
     .where(eq(storyPages.storyId, id))
-    .orderBy(storyPages.pageNumber);
+    .orderBy(storyPages.pageNumber)
+    .all();
 
-  const chars = await db
+  const chars = db
     .select()
     .from(characters)
-    .where(eq(characters.storyId, id));
+    .where(eq(characters.storyId, id))
+    .all();
 
   let plan = null;
   try {
@@ -50,7 +52,7 @@ export async function PUT(
 ) {
   const { id } = await params;
 
-  const story = await db.select().from(stories).where(eq(stories.id, id)).get();
+  const story = db.select().from(stories).where(eq(stories.id, id)).get();
   if (!story) {
     return NextResponse.json({ error: "Story not found" }, { status: 404 });
   }
@@ -83,7 +85,7 @@ export async function PUT(
     updateData.plan = JSON.stringify(parsed.data.plan);
   if (parsed.data.status !== undefined) updateData.status = parsed.data.status;
 
-  await db.update(stories).set(updateData).where(eq(stories.id, id));
+  db.update(stories).set(updateData).where(eq(stories.id, id)).run();
 
   return NextResponse.json({ success: true });
 }
@@ -95,12 +97,12 @@ export async function DELETE(
 ) {
   const { id } = await params;
 
-  const story = await db.select().from(stories).where(eq(stories.id, id)).get();
+  const story = db.select().from(stories).where(eq(stories.id, id)).get();
   if (!story) {
     return NextResponse.json({ error: "Story not found" }, { status: 404 });
   }
 
-  await db.delete(stories).where(eq(stories.id, id));
+  db.delete(stories).where(eq(stories.id, id)).run();
 
   return NextResponse.json({ success: true });
 }

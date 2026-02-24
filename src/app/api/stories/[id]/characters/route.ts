@@ -12,10 +12,11 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  const chars = await db
+  const chars = db
     .select()
     .from(characters)
-    .where(eq(characters.storyId, id));
+    .where(eq(characters.storyId, id))
+    .all();
 
   return NextResponse.json(chars);
 }
@@ -27,7 +28,7 @@ export async function POST(
 ) {
   const { id } = await params;
 
-  const story = await db.select().from(stories).where(eq(stories.id, id)).get();
+  const story = db.select().from(stories).where(eq(stories.id, id)).get();
   if (!story) {
     return NextResponse.json({ error: "Story not found" }, { status: 404 });
   }
@@ -39,11 +40,12 @@ export async function POST(
     );
   }
 
-  const pages = await db
+  const pages = db
     .select()
     .from(storyPages)
     .where(eq(storyPages.storyId, id))
-    .orderBy(storyPages.pageNumber);
+    .orderBy(storyPages.pageNumber)
+    .all();
 
   if (pages.length === 0) {
     return NextResponse.json(
@@ -70,7 +72,7 @@ export async function POST(
 
     // Use a transaction for atomic character replacement (sync for better-sqlite3)
     db.transaction((tx) => {
-      tx.delete(characters).where(eq(characters.storyId, id));
+      tx.delete(characters).where(eq(characters.storyId, id)).run();
 
       for (const char of extracted) {
         const charId = generateId();
@@ -81,7 +83,7 @@ export async function POST(
           description: char.description,
           isUploaded: false,
           createdAt: now,
-        });
+        }).run();
         created.push({
           id: charId,
           storyId: id,
@@ -96,7 +98,8 @@ export async function POST(
       tx
         .update(stories)
         .set({ status: "characters_ready", updatedAt: now })
-        .where(eq(stories.id, id));
+        .where(eq(stories.id, id))
+        .run();
     });
 
     return NextResponse.json(created);

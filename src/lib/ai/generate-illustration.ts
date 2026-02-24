@@ -70,8 +70,14 @@ export async function generateIllustration(
         }
 
         const ext = inlineData.mimeType.includes("png") ? "png" : "jpg";
-        const filename = `page_${pageId}.${ext}`;
+        const filename = `page_${pageId}_${Date.now()}.${ext}`;
         const filePath = path.join(dir, filename);
+
+        // Clean up old page images
+        const existing = fs.readdirSync(dir).filter((f) => f.startsWith(`page_${pageId}`) && f !== filename);
+        for (const old of existing) {
+          fs.unlinkSync(path.join(dir, old));
+        }
 
         fs.writeFileSync(filePath, Buffer.from(inlineData.data, "base64"));
         return `/generated/${storyId}/${filename}`;

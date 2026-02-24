@@ -11,7 +11,7 @@ export async function POST(
 ) {
   const { id } = await params;
 
-  const story = await db.select().from(stories).where(eq(stories.id, id)).get();
+  const story = db.select().from(stories).where(eq(stories.id, id)).get();
   if (!story) {
     return NextResponse.json({ error: "Story not found" }, { status: 404 });
   }
@@ -34,7 +34,7 @@ export async function POST(
       context: story.context || "",
     });
 
-    await db
+    db
       .update(stories)
       .set({
         title: result.title,
@@ -42,7 +42,8 @@ export async function POST(
         status: "plan_ready",
         updatedAt: new Date().toISOString(),
       })
-      .where(eq(stories.id, id));
+      .where(eq(stories.id, id))
+      .run();
 
     return NextResponse.json({
       title: result.title,

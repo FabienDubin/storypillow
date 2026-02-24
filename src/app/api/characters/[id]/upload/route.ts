@@ -38,8 +38,14 @@ export async function POST(
   }
 
   const ext = path.extname(file.name) || ".png";
-  const filename = `char_${id}${ext}`;
+  const filename = `char_${id}_${Date.now()}${ext}`;
   const filePath = path.join(dir, filename);
+
+  // Clean up old uploaded images for this character
+  const existing = fs.readdirSync(dir).filter((f) => f.startsWith(`char_${id}`) && f !== filename);
+  for (const old of existing) {
+    fs.unlinkSync(path.join(dir, old));
+  }
 
   const buffer = Buffer.from(await file.arrayBuffer());
   fs.writeFileSync(filePath, buffer);

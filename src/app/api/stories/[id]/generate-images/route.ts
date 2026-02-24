@@ -12,7 +12,7 @@ export async function POST(
 ) {
   const { id } = await params;
 
-  const story = await db.select().from(stories).where(eq(stories.id, id)).get();
+  const story = db.select().from(stories).where(eq(stories.id, id)).get();
   if (!story) {
     return NextResponse.json({ error: "Story not found" }, { status: 404 });
   }
@@ -24,21 +24,23 @@ export async function POST(
     );
   }
 
-  const pages = await db
+  const pages = db
     .select()
     .from(storyPages)
     .where(eq(storyPages.storyId, id))
-    .orderBy(storyPages.pageNumber);
+    .orderBy(storyPages.pageNumber)
+    .all();
 
   if (pages.length === 0) {
     return NextResponse.json({ error: "No pages found" }, { status: 404 });
   }
 
   // Load character reference images safely
-  const chars = await db
+  const chars = db
     .select()
     .from(characters)
-    .where(eq(characters.storyId, id));
+    .where(eq(characters.storyId, id))
+    .all();
 
   const referenceImages = loadReferenceImages(chars);
 
@@ -58,10 +60,11 @@ export async function POST(
         referenceImages
       );
 
-      await db
+      db
         .update(storyPages)
         .set({ imagePath })
-        .where(eq(storyPages.id, page.id));
+        .where(eq(storyPages.id, page.id))
+        .run();
 
       results.push({ pageId: page.id, imagePath });
     } catch (error) {
@@ -77,10 +80,11 @@ export async function POST(
   // Update story status
   const allGenerated = results.every((r) => r.imagePath !== null);
   if (allGenerated) {
-    await db
+    db
       .update(stories)
       .set({ status: "complete", updatedAt: new Date().toISOString() })
-      .where(eq(stories.id, id));
+      .where(eq(stories.id, id))
+      .run();
   }
 
   return NextResponse.json({ results });

@@ -71,8 +71,14 @@ export async function generateCharacterImage(
         }
 
         const ext = inlineData.mimeType.includes("png") ? "png" : "jpg";
-        const filename = `char_${characterId}.${ext}`;
+        const filename = `char_${characterId}_${Date.now()}.${ext}`;
         const filePath = path.join(dir, filename);
+
+        // Clean up old character images
+        const existing = fs.readdirSync(dir).filter((f) => f.startsWith(`char_${characterId}`) && f !== filename);
+        for (const old of existing) {
+          fs.unlinkSync(path.join(dir, old));
+        }
 
         fs.writeFileSync(filePath, Buffer.from(inlineData.data, "base64"));
         return `/generated/${storyId}/${filename}`;

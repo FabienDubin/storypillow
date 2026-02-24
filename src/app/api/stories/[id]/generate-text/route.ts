@@ -12,7 +12,7 @@ export async function POST(
 ) {
   const { id } = await params;
 
-  const story = await db.select().from(stories).where(eq(stories.id, id)).get();
+  const story = db.select().from(stories).where(eq(stories.id, id)).get();
   if (!story) {
     return NextResponse.json({ error: "Story not found" }, { status: 404 });
   }
@@ -58,7 +58,7 @@ export async function POST(
 
     // Use a transaction for atomic page replacement (sync for better-sqlite3)
     db.transaction((tx) => {
-      tx.delete(storyPages).where(eq(storyPages.storyId, id));
+      tx.delete(storyPages).where(eq(storyPages.storyId, id)).run();
 
       for (let i = 0; i < result.pages.length; i++) {
         tx.insert(storyPages).values({
@@ -68,7 +68,7 @@ export async function POST(
           title: result.pages[i].title,
           text: result.pages[i].text,
           createdAt: now,
-        });
+        }).run();
       }
 
       tx
@@ -77,15 +77,17 @@ export async function POST(
           status: "text_ready",
           updatedAt: now,
         })
-        .where(eq(stories.id, id));
+        .where(eq(stories.id, id))
+        .run();
     });
 
     // Fetch created pages
-    const pages = await db
+    const pages = db
       .select()
       .from(storyPages)
       .where(eq(storyPages.storyId, id))
-      .orderBy(storyPages.pageNumber);
+      .orderBy(storyPages.pageNumber)
+      .all();
 
     return NextResponse.json({ pages });
   } catch (error) {
