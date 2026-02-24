@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { characters, characterLibrary } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { useLibraryCharacterSchema, parseBody } from "@/lib/validations";
 import fs from "fs";
 import path from "path";
 
@@ -12,21 +13,19 @@ export async function POST(
 ) {
   const { id } = await params;
 
-  let body: { libraryCharacterId: string };
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (!body.libraryCharacterId) {
-    return NextResponse.json(
-      { error: "libraryCharacterId is required" },
-      { status: 400 }
-    );
+  const parsed = parseBody(useLibraryCharacterSchema, body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
 
-  const character = await db
+  const character = db
     .select()
     .from(characters)
     .where(eq(characters.id, id))
@@ -39,10 +38,10 @@ export async function POST(
     );
   }
 
-  const libChar = await db
+  const libChar = db
     .select()
     .from(characterLibrary)
-    .where(eq(characterLibrary.id, body.libraryCharacterId))
+    .where(eq(characterLibrary.id, parsed.data.libraryCharacterId))
     .get();
 
   if (!libChar) {
@@ -88,15 +87,15 @@ export async function POST(
 
   const imagePath = `/generated/${character.storyId}/${destFilename}`;
 
-  await db
-    .update(characters)
+  db.update(characters)
     .set({
       referenceImagePath: imagePath,
       description: libChar.description,
       isUploaded: false,
       libraryCharacterId: libChar.id,
     })
-    .where(eq(characters.id, id));
+    .where(eq(characters.id, id))
+    .run();
 
   return NextResponse.json({
     imagePath,

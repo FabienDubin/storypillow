@@ -18,22 +18,33 @@ export default function CharacterLibraryModal({
   const [libraryChars, setLibraryChars] = useState<LibraryCharacter[]>([]);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (open) {
       setLoading(true);
+      setError("");
       fetch("/api/characters/library")
         .then((r) => r.json())
         .then((data) => setLibraryChars(data))
+        .catch(() => setError("Erreur de chargement"))
         .finally(() => setLoading(false));
     }
   }, [open]);
 
   async function handleDelete(id: string) {
+    if (!confirm("Supprimer ce personnage de la bibliothèque ?")) return;
+
     setDeletingId(id);
     try {
-      await fetch(`/api/characters/library/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/characters/library/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        setError("Erreur lors de la suppression");
+        return;
+      }
       setLibraryChars((prev) => prev.filter((c) => c.id !== id));
+    } catch {
+      setError("Erreur serveur");
     } finally {
       setDeletingId(null);
     }
@@ -55,10 +66,10 @@ export default function CharacterLibraryModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-purple/20">
           <div>
             <h2 className="text-xl font-bold text-cream font-sans">
-              Biblioth&egrave;que de personnages
+              Bibliothèque de personnages
             </h2>
             <p className="text-cream/50 text-sm font-sans mt-0.5">
-              S&eacute;lectionnez un personnage existant
+              Sélectionnez un personnage existant
             </p>
           </div>
           <button
@@ -83,6 +94,11 @@ export default function CharacterLibraryModal({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
+          {error && (
+            <div className="bg-red-500/20 border border-red-500/40 text-red-200 rounded-xl px-4 py-2.5 text-sm mb-4">
+              {error}
+            </div>
+          )}
           {loading ? (
             <div className="text-center py-12">
               <div className="spinner h-8 w-8 border-2 border-gold/30 border-t-gold rounded-full mx-auto mb-3" />
@@ -92,11 +108,11 @@ export default function CharacterLibraryModal({
             <div className="text-center py-12">
               <span className="text-4xl block mb-3">📚</span>
               <p className="text-cream/50 font-sans">
-                Aucun personnage dans la biblioth&egrave;que.
+                Aucun personnage dans la bibliothèque.
               </p>
               <p className="text-cream/30 font-sans text-sm mt-1">
-                G&eacute;n&eacute;rez des images de personnages puis ajoutez-les
-                &agrave; la biblioth&egrave;que.
+                Générez des images de personnages puis ajoutez-les
+                à la bibliothèque.
               </p>
             </div>
           ) : (

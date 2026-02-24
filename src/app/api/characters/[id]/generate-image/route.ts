@@ -11,7 +11,7 @@ export async function POST(
 ) {
   const { id } = await params;
 
-  const character = await db
+  const character = db
     .select()
     .from(characters)
     .where(eq(characters.id, id))
@@ -31,10 +31,10 @@ export async function POST(
       character.id
     );
 
-    await db
-      .update(characters)
+    db.update(characters)
       .set({ referenceImagePath: imagePath, isUploaded: false })
-      .where(eq(characters.id, id));
+      .where(eq(characters.id, id))
+      .run();
 
     return NextResponse.json({ imagePath });
   } catch (error) {

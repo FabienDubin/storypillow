@@ -48,6 +48,19 @@ export const updateCharacterSchema = z.object({
   description: z.string().min(1).optional(),
 });
 
+export const useLibraryCharacterSchema = z.object({
+  libraryCharacterId: z.string().min(1),
+});
+
+export const addToLibrarySchema = z.object({
+  characterId: z.string().min(1),
+});
+
+export const updateLibraryCharacterSchema = z.object({
+  name: z.string().min(1).optional(),
+  description: z.string().min(1).optional(),
+});
+
 export function parseBody<T>(schema: z.ZodSchema<T>, data: unknown) {
   const result = schema.safeParse(data);
   if (!result.success) {

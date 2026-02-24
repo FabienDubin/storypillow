@@ -1,47 +1,66 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { characters, characterLibrary } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import { addToLibrarySchema, parseBody } from "@/lib/validations";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 
 // GET /api/characters/library — List all library characters
 export async function GET() {
-  const libraryChars = await db
+  const libraryChars = db
     .select()
     .from(characterLibrary)
-    .orderBy(characterLibrary.name);
+    .orderBy(characterLibrary.name)
+    .all();
 
   return NextResponse.json(libraryChars);
 }
 
 // POST /api/characters/library — Add a story character to the library
 export async function POST(request: NextRequest) {
-  let body: { characterId: string };
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (!body.characterId) {
-    return NextResponse.json(
-      { error: "characterId is required" },
-      { status: 400 }
-    );
+  const parsed = parseBody(addToLibrarySchema, body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
 
-  const character = await db
+  const character = db
     .select()
     .from(characters)
-    .where(eq(characters.id, body.characterId))
+    .where(eq(characters.id, parsed.data.characterId))
     .get();
 
   if (!character) {
     return NextResponse.json(
       { error: "Character not found" },
       { status: 404 }
+    );
+  }
+
+  // Check for duplicate
+  const existing = db
+    .select()
+    .from(characterLibrary)
+    .where(
+      and(
+        eq(characterLibrary.name, character.name),
+        eq(characterLibrary.sourceStoryId, character.storyId)
+      )
+    )
+    .get();
+
+  if (existing) {
+    return NextResponse.json(
+      { error: "Ce personnage est déjà dans la bibliothèque" },
+      { status: 409 }
     );
   }
 
@@ -78,15 +97,15 @@ export async function POST(request: NextRequest) {
 
   const imagePath = `/library/${destFilename}`;
 
-  await db.insert(characterLibrary).values({
+  db.insert(characterLibrary).values({
     id: libraryId,
     name: character.name,
     description: character.description,
     imagePath,
     sourceStoryId: character.storyId,
-  });
+  }).run();
 
-  const created = await db
+  const created = db
     .select()
     .from(characterLibrary)
     .where(eq(characterLibrary.id, libraryId))

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { characterLibrary } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { updateLibraryCharacterSchema, parseBody } from "@/lib/validations";
 import fs from "fs";
 import path from "path";
 
@@ -12,7 +13,7 @@ export async function DELETE(
 ) {
   const { id } = await params;
 
-  const libChar = await db
+  const libChar = db
     .select()
     .from(characterLibrary)
     .where(eq(characterLibrary.id, id))
@@ -33,9 +34,9 @@ export async function DELETE(
     }
   }
 
-  await db.delete(characterLibrary).where(eq(characterLibrary.id, id));
+  db.delete(characterLibrary).where(eq(characterLibrary.id, id)).run();
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ ok: true });
 }
 
 // PUT /api/characters/library/[id] — Update library character
@@ -45,7 +46,7 @@ export async function PUT(
 ) {
   const { id } = await params;
 
-  const libChar = await db
+  const libChar = db
     .select()
     .from(characterLibrary)
     .where(eq(characterLibrary.id, id))
@@ -55,23 +56,28 @@ export async function PUT(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  let body: { name?: string; description?: string };
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const updateData: Record<string, unknown> = {};
-  if (body.name) updateData.name = body.name;
-  if (body.description) updateData.description = body.description;
-
-  if (Object.keys(updateData).length > 0) {
-    await db
-      .update(characterLibrary)
-      .set(updateData)
-      .where(eq(characterLibrary.id, id));
+  const parsed = parseBody(updateLibraryCharacterSchema, body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
 
-  return NextResponse.json({ success: true });
+  const updateData: Record<string, unknown> = {};
+  if (parsed.data.name) updateData.name = parsed.data.name;
+  if (parsed.data.description) updateData.description = parsed.data.description;
+
+  if (Object.keys(updateData).length > 0) {
+    db.update(characterLibrary)
+      .set(updateData)
+      .where(eq(characterLibrary.id, id))
+      .run();
+  }
+
+  return NextResponse.json({ ok: true });
 }

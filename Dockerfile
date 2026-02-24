@@ -15,7 +15,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Create data directories
-RUN mkdir -p data uploads generated
+RUN mkdir -p data uploads generated library
 
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
@@ -35,8 +35,8 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
 # Create directories for data persistence
-RUN mkdir -p data uploads generated && \
-    chown -R nextjs:nodejs data uploads generated
+RUN mkdir -p data uploads generated library && \
+    chown -R nextjs:nodejs data uploads generated library
 
 USER nextjs
 

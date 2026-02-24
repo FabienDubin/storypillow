@@ -11,7 +11,7 @@ export async function PUT(
 ) {
   const { id } = await params;
 
-  const character = await db.select().from(characters).where(eq(characters.id, id)).get();
+  const character = db.select().from(characters).where(eq(characters.id, id)).get();
   if (!character) {
     return NextResponse.json({ error: "Character not found" }, { status: 404 });
   }
@@ -32,7 +32,7 @@ export async function PUT(
   if (parsed.data.name !== undefined) updateData.name = parsed.data.name;
   if (parsed.data.description !== undefined) updateData.description = parsed.data.description;
 
-  await db.update(characters).set(updateData).where(eq(characters.id, id));
+  db.update(characters).set(updateData).where(eq(characters.id, id)).run();
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ ok: true });
 }
