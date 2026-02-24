@@ -72,22 +72,22 @@ export default function CreateNewStoryPage() {
       <StarField count={30} />
       <Header />
 
-      <main className="relative z-10 max-w-3xl mx-auto px-6 py-10">
+      <main className="relative z-10 max-w-3xl mx-auto px-4 py-6 sm:px-6 sm:py-10">
         <StepIndicator
           currentStep={1}
           totalSteps={5}
           labels={STEP_LABELS}
         />
 
-        <h1 className="text-2xl font-bold text-cream font-sans mb-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-cream font-sans mb-2">
           Nouvelle histoire
         </h1>
-        <p className="text-cream/60 font-sans mb-8">
+        <p className="text-cream/60 font-sans mb-6 sm:mb-8 text-sm sm:text-base">
           Configurez le thème et les paramètres de l&apos;histoire
         </p>
 
         <form onSubmit={handleSubmit}>
-          <Card className="space-y-6">
+          <Card className="space-y-4 sm:space-y-6">
             <Input
               label="Prénom de l'enfant"
               value={childName}
@@ -95,7 +95,7 @@ export default function CreateNewStoryPage() {
               placeholder="ex: Léa, Hugo..."
             />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <Select
                 label="Thématique"
                 value={theme}

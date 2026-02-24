@@ -111,34 +111,35 @@ export default function TextPage({
       <StarField count={30} />
       <Header />
 
-      <main className="relative z-10 max-w-3xl mx-auto px-6 py-10">
+      <main className="relative z-10 max-w-3xl mx-auto px-4 py-6 sm:px-6 sm:py-10">
         <StepIndicator
           currentStep={3}
           totalSteps={5}
           labels={STEP_LABELS}
         />
 
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-cream font-sans">
+            <h1 className="text-xl sm:text-2xl font-bold text-cream font-sans">
               Texte de l&apos;histoire
             </h1>
-            <p className="text-cream/60 font-sans mt-1">
+            <p className="text-cream/60 font-sans mt-1 text-sm sm:text-base">
               Relisez et modifiez le texte de chaque page
             </p>
           </div>
           {generated && (
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-sm text-cream/60 font-sans">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="text-left sm:text-right">
+                <p className="text-xs sm:text-sm text-cream/60 font-sans">
                   {totalWords} mots
                 </p>
-                <p className="text-sm text-gold font-sans">
+                <p className="text-xs sm:text-sm text-gold font-sans">
                   ~{readingTime} min de lecture
                 </p>
               </div>
               <Button
                 variant="secondary"
+                size="sm"
                 onClick={handleGenerate}
                 loading={generating}
               >
@@ -163,10 +164,10 @@ export default function TextPage({
           </Card>
         ) : generated ? (
           <>
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {pages.map((page, index) => (
                 <Card key={page.id}>
-                  <div className="flex items-center gap-3 mb-3">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-3">
                     <span className="bg-gold/20 text-gold px-2.5 py-1 rounded-lg text-sm font-sans font-bold">
                       Page {index + 1}
                     </span>
@@ -190,7 +191,7 @@ export default function TextPage({
                     onChange={(e) => handleEditPage(page.id, e.target.value)}
                     onBlur={() => handleSavePage(page.id, page.text)}
                     rows={6}
-                    className="w-full bg-navy border border-purple/20 text-cream rounded-xl p-4 font-serif text-base leading-relaxed focus:outline-none focus:ring-1 focus:ring-gold/30 resize-none"
+                    className="w-full bg-navy border border-purple/20 text-cream rounded-xl p-3 sm:p-4 font-serif text-base leading-relaxed focus:outline-none focus:ring-1 focus:ring-gold/30 resize-none"
                   />
                 </Card>
               ))}

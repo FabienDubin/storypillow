@@ -30,18 +30,27 @@ body {
   font-family: "Georgia", "Times New Roman", serif;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 8px;
+/* Scrollbar styling — hidden on touch devices, styled on desktop */
+@media (pointer: fine) {
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--navy);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--purple);
+    border-radius: 4px;
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: var(--navy);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--purple);
-  border-radius: 4px;
+@media (pointer: coarse) {
+  ::-webkit-scrollbar {
+    width: 0;
+    display: none;
+  }
 }
 
 /* Stars animation */

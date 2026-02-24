@@ -69,17 +69,17 @@ export default function DashboardPage() {
       <StarField />
       <Header />
 
-      <main className="relative z-10 max-w-6xl mx-auto px-6 py-10">
-        <div className="flex items-center justify-between mb-8">
+      <main className="relative z-10 max-w-6xl mx-auto px-4 py-6 sm:px-6 sm:py-10">
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-cream font-sans">
+            <h1 className="text-2xl sm:text-3xl font-bold text-cream font-sans">
               Bibliothèque
             </h1>
-            <p className="text-cream/60 mt-1 font-sans">
+            <p className="text-cream/60 mt-1 font-sans text-sm sm:text-base">
               Toutes les histoires illustrées
             </p>
           </div>
-          <Button onClick={handleCreateNew} size="lg">
+          <Button onClick={handleCreateNew}>
             + Nouvelle histoire
           </Button>
         </div>
@@ -102,7 +102,7 @@ export default function DashboardPage() {
             </Button>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {stories.map((story) => (
               <Card
                 key={story.id}

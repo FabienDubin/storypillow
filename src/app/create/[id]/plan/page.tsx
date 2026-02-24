@@ -119,7 +119,7 @@ export default function PlanPage({
       <StarField count={30} />
       <Header />
 
-      <main className="relative z-10 max-w-3xl mx-auto px-6 py-10">
+      <main className="relative z-10 max-w-3xl mx-auto px-4 py-6 sm:px-6 sm:py-10">
         <StepIndicator
           currentStep={2}
           totalSteps={5}
@@ -128,10 +128,10 @@ export default function PlanPage({
 
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-cream font-sans">
+            <h1 className="text-xl sm:text-2xl font-bold text-cream font-sans">
               Plan narratif
             </h1>
-            <p className="text-cream/60 font-sans mt-1">
+            <p className="text-cream/60 font-sans mt-1 text-sm sm:text-base">
               Revoyez et modifiez le plan de l&apos;histoire
             </p>
           </div>
@@ -169,19 +169,19 @@ export default function PlanPage({
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-navy border border-purple/30 text-cream text-xl font-bold rounded-xl px-4 py-3 font-sans focus:outline-none focus:ring-2 focus:ring-gold/50"
+                className="w-full bg-navy border border-purple/30 text-cream text-lg sm:text-xl font-bold rounded-xl px-4 py-3 font-sans focus:outline-none focus:ring-2 focus:ring-gold/50"
               />
             </Card>
 
             <div className="space-y-4">
               {plan.map((item, index) => (
                 <Card key={index} className="relative">
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-2 sm:gap-4">
                     <div className="flex flex-col gap-1 shrink-0">
                       <button
                         onClick={() => handleMoveItem(index, "up")}
                         disabled={index === 0}
-                        className="text-cream/40 hover:text-cream disabled:opacity-20 text-sm cursor-pointer"
+                        className="text-cream/40 hover:text-cream disabled:opacity-20 text-sm cursor-pointer p-1"
                       >
                         ▲
                       </button>
@@ -191,7 +191,7 @@ export default function PlanPage({
                       <button
                         onClick={() => handleMoveItem(index, "down")}
                         disabled={index === plan.length - 1}
-                        className="text-cream/40 hover:text-cream disabled:opacity-20 text-sm cursor-pointer"
+                        className="text-cream/40 hover:text-cream disabled:opacity-20 text-sm cursor-pointer p-1"
                       >
                         ▼
                       </button>
@@ -211,7 +211,7 @@ export default function PlanPage({
                           handleEditItem(index, "description", e.target.value)
                         }
                         rows={2}
-                        className="w-full bg-transparent border border-purple/20 text-cream/80 rounded-lg p-2 font-sans text-sm focus:outline-none focus:ring-1 focus:ring-gold/30 resize-none"
+                        className="w-full bg-transparent border border-purple/20 text-cream/80 rounded-lg p-2 font-sans text-base sm:text-sm focus:outline-none focus:ring-1 focus:ring-gold/30 resize-none"
                       />
                     </div>
                     <button

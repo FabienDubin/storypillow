@@ -42,11 +42,11 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center relative">
       <StarField count={40} />
       <div className="relative z-10 w-full max-w-sm mx-4">
-        <div className="text-center mb-8">
-          <span className="text-5xl" role="img" aria-label="moon">
+        <div className="text-center mb-6 sm:mb-8">
+          <span className="text-4xl sm:text-5xl" role="img" aria-label="moon">
             🌙
           </span>
-          <h1 className="text-2xl font-bold text-cream mt-4 font-sans">
+          <h1 className="text-xl sm:text-2xl font-bold text-cream mt-4 font-sans">
             Storypillow
           </h1>
           <p className="text-cream/60 text-sm mt-1">
@@ -75,7 +75,7 @@ export default function LoginPage() {
               placeholder="votre@email.com"
               required
               autoFocus
-              className="w-full bg-navy border border-purple/30 text-cream rounded-xl px-4 py-2.5 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 placeholder-cream/30"
+              className="w-full bg-navy border border-purple/30 text-cream rounded-xl px-4 py-3 font-sans text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 placeholder-cream/30"
             />
           </div>
 
@@ -89,14 +89,14 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              className="w-full bg-navy border border-purple/30 text-cream rounded-xl px-4 py-2.5 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 placeholder-cream/30"
+              className="w-full bg-navy border border-purple/30 text-cream rounded-xl px-4 py-3 font-sans text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 placeholder-cream/30"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full inline-flex items-center justify-center rounded-xl font-sans font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gold/50 bg-gold text-navy hover:bg-gold-light shadow-lg shadow-gold/20 px-5 py-2.5 text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            className="w-full inline-flex items-center justify-center rounded-xl font-sans font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gold/50 bg-gold text-navy hover:bg-gold-light shadow-lg shadow-gold/20 px-5 py-3 text-base min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {loading ? (
               <>

@@ -23,7 +23,7 @@ export default function Select({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-navy-light border border-purple/30 text-cream rounded-xl px-4 py-2.5 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 appearance-none cursor-pointer"
+        className="w-full bg-navy-light border border-purple/30 text-cream rounded-xl px-4 py-3 font-sans text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 appearance-none cursor-pointer"
       >
         <option value="">{placeholder}</option>
         {options.map((opt) => (

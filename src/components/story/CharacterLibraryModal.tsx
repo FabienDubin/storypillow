@@ -61,11 +61,11 @@ export default function CharacterLibraryModal({
       />
 
       {/* Modal */}
-      <div className="relative z-10 w-full max-w-2xl max-h-[80vh] mx-4 bg-navy-light border border-purple/30 rounded-2xl shadow-2xl shadow-purple/10 flex flex-col">
+      <div className="relative z-10 w-full max-w-2xl max-h-[85vh] sm:max-h-[80vh] mx-3 sm:mx-4 bg-navy-light border border-purple/30 rounded-2xl shadow-2xl shadow-purple/10 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-purple/20">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-purple/20">
           <div>
-            <h2 className="text-xl font-bold text-cream font-sans">
+            <h2 className="text-lg sm:text-xl font-bold text-cream font-sans">
               Bibliothèque de personnages
             </h2>
             <p className="text-cream/50 text-sm font-sans mt-0.5">
@@ -93,7 +93,7 @@ export default function CharacterLibraryModal({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           {error && (
             <div className="bg-red-500/20 border border-red-500/40 text-red-200 rounded-xl px-4 py-2.5 text-sm mb-4">
               {error}
@@ -116,11 +116,11 @@ export default function CharacterLibraryModal({
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {libraryChars.map((libChar) => (
                 <div
                   key={libChar.id}
-                  className="group bg-navy/60 border border-purple/20 rounded-xl p-4 hover:border-gold/30 transition-all duration-200"
+                  className="group bg-navy/60 border border-purple/20 rounded-xl p-3 sm:p-4 hover:border-gold/30 transition-all duration-200"
                 >
                   {/* Image */}
                   <div className="w-full aspect-square bg-navy/40 rounded-lg overflow-hidden mb-3 border border-purple/10">

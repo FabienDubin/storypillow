@@ -125,10 +125,10 @@ export default function ReadPage({
       className={`min-h-screen landscape:min-h-0 landscape:h-dvh ${bgColor} ${textColor} flex flex-col select-none landscape:overflow-hidden`}
     >
       {/* Top bar — always visible, subtle */}
-      <div className="shrink-0 flex items-center justify-between px-6 py-3 z-20">
+      <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-2 sm:py-3 z-20">
         <button
           onClick={() => router.push("/")}
-          className={`font-sans text-sm transition-colors cursor-pointer ${
+          className={`font-sans text-xs sm:text-sm py-2 transition-colors cursor-pointer ${
             darkMode
               ? "text-cream/60 hover:text-cream"
               : "text-[#1a1a2e]/60 hover:text-[#1a1a2e]"
@@ -136,12 +136,12 @@ export default function ReadPage({
         >
           ← Retour
         </button>
-        <span className={`${subtitleColor} font-sans text-sm`}>
+        <span className={`${subtitleColor} font-sans text-xs sm:text-sm`}>
           {currentPage + 1} / {pages.length}
         </span>
         <button
           onClick={() => setDarkMode(!darkMode)}
-          className={`font-sans text-sm transition-colors cursor-pointer ${
+          className={`font-sans text-xs sm:text-sm py-2 transition-colors cursor-pointer ${
             darkMode
               ? "text-cream/60 hover:text-cream"
               : "text-[#1a1a2e]/60 hover:text-[#1a1a2e]"
@@ -157,7 +157,7 @@ export default function ReadPage({
         key={currentPage}
       >
         {/* Illustration — portrait: full height with side margins, landscape: half-width */}
-        <div className="flex-1 landscape:flex-none relative overflow-hidden min-h-[40vh] px-12 landscape:px-0 landscape:w-1/2">
+        <div className="flex-1 landscape:flex-none relative overflow-hidden min-h-[35vh] sm:min-h-[40vh] px-4 sm:px-8 md:px-12 landscape:px-0 landscape:w-1/2">
           {page.imagePath ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -185,16 +185,16 @@ export default function ReadPage({
 
         {/* Text section — portrait: normal flow, landscape: scrollable within bounds */}
         <div className="landscape:flex-1 landscape:min-h-0 landscape:overflow-y-auto landscape:w-1/2">
-          <div className="px-8 py-8 md:px-16 lg:px-24 landscape:px-8 landscape:md:px-12 landscape:min-h-full landscape:flex landscape:flex-col landscape:justify-center">
+          <div className="px-5 py-6 sm:px-8 sm:py-8 md:px-16 lg:px-24 landscape:px-8 landscape:md:px-12 landscape:min-h-full landscape:flex landscape:flex-col landscape:justify-center">
             <h2
-              className={`font-sans font-bold text-lg mb-4 ${
+              className={`font-sans font-bold text-base sm:text-lg mb-3 sm:mb-4 ${
                 darkMode ? "text-gold" : "text-purple"
               }`}
             >
               {page.title}
             </h2>
             <div
-              className={`font-serif text-xl md:text-2xl leading-relaxed ${textColor} whitespace-pre-line`}
+              className={`font-serif text-lg sm:text-xl md:text-2xl leading-relaxed ${textColor} whitespace-pre-line`}
             >
               {page.text}
             </div>
@@ -203,11 +203,11 @@ export default function ReadPage({
       </div>
 
       {/* Navigation buttons */}
-      <div className="shrink-0 flex items-center justify-between px-8 py-4">
+      <div className="shrink-0 flex items-center justify-between px-4 sm:px-8 py-3 sm:py-4">
         <button
           onClick={goPrev}
           disabled={isFirstPage}
-          className={`px-6 py-3 rounded-xl font-sans font-semibold transition-all cursor-pointer ${
+          className={`px-3 sm:px-6 py-3 rounded-xl font-sans text-sm sm:text-base font-semibold transition-all cursor-pointer min-h-[44px] ${
             isFirstPage
               ? "opacity-20 cursor-not-allowed"
               : darkMode
@@ -215,18 +215,19 @@ export default function ReadPage({
                 : "text-[#1a1a2e]/70 hover:text-[#1a1a2e] hover:bg-black/5"
           }`}
         >
-          ← Précédent
+          <span className="hidden sm:inline">← Précédent</span>
+          <span className="sm:hidden">←</span>
         </button>
 
         {/* Progress dots */}
-        <div className="flex gap-1.5">
+        <div className="flex gap-1 sm:gap-1.5 flex-wrap justify-center max-w-[50%]">
           {pages.map((_, i) => (
             <button
               key={i}
               onClick={() => setCurrentPage(i)}
-              className={`w-2 h-2 rounded-full transition-all cursor-pointer ${
+              className={`w-2 h-2 rounded-full transition-all cursor-pointer p-1 box-content ${
                 i === currentPage
-                  ? "bg-gold w-6"
+                  ? "bg-gold w-4 sm:w-6"
                   : darkMode
                     ? "bg-cream/20 hover:bg-cream/40"
                     : "bg-[#1a1a2e]/20 hover:bg-[#1a1a2e]/40"
@@ -237,13 +238,14 @@ export default function ReadPage({
 
         <button
           onClick={isLastPage ? () => router.push("/") : goNext}
-          className={`px-6 py-3 rounded-xl font-sans font-semibold transition-all cursor-pointer ${
+          className={`px-3 sm:px-6 py-3 rounded-xl font-sans text-sm sm:text-base font-semibold transition-all cursor-pointer min-h-[44px] ${
             darkMode
               ? "text-cream/70 hover:text-cream hover:bg-white/5"
               : "text-[#1a1a2e]/70 hover:text-[#1a1a2e] hover:bg-black/5"
           }`}
         >
-          {isLastPage ? "Fin ✨" : "Suivant →"}
+          <span className="hidden sm:inline">{isLastPage ? "Fin ✨" : "Suivant →"}</span>
+          <span className="sm:hidden">{isLastPage ? "✨" : "→"}</span>
         </button>
       </div>
     </div>

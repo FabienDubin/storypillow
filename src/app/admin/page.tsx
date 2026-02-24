@@ -154,10 +154,10 @@ export default function AdminPage() {
       <StarField count={30} />
       <Header />
 
-      <main className="relative z-10 max-w-4xl mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-8">
+      <main className="relative z-10 max-w-4xl mx-auto px-4 py-6 sm:px-6 sm:py-8">
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-cream font-sans">
+            <h1 className="text-xl sm:text-2xl font-bold text-cream font-sans">
               Gestion des comptes
             </h1>
             <p className="text-cream/60 text-sm mt-1">
@@ -166,7 +166,7 @@ export default function AdminPage() {
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="inline-flex items-center justify-center rounded-xl font-sans font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gold/50 bg-gold text-navy hover:bg-gold-light shadow-lg shadow-gold/20 px-5 py-2.5 text-base cursor-pointer"
+            className="inline-flex items-center justify-center rounded-xl font-sans font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gold/50 bg-gold text-navy hover:bg-gold-light shadow-lg shadow-gold/20 px-4 py-2.5 text-sm sm:text-base sm:px-5 min-h-[44px] cursor-pointer"
           >
             {showForm ? "Annuler" : "+ Nouveau compte"}
           </button>
@@ -176,7 +176,7 @@ export default function AdminPage() {
         {showForm && (
           <form
             onSubmit={handleCreate}
-            className="bg-navy-light/60 border border-purple/30 rounded-2xl p-6 backdrop-blur-sm mb-6"
+            className="bg-navy-light/60 border border-purple/30 rounded-2xl p-4 sm:p-6 backdrop-blur-sm mb-6"
           >
             <h2 className="text-lg font-bold text-cream font-sans mb-4">
               Créer un compte
@@ -198,7 +198,7 @@ export default function AdminPage() {
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   required
-                  className="w-full bg-navy border border-purple/30 text-cream rounded-xl px-4 py-2.5 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 placeholder-cream/30"
+                  className="w-full bg-navy border border-purple/30 text-cream rounded-xl px-4 py-3 font-sans text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 placeholder-cream/30"
                 />
               </div>
               <div>
@@ -210,7 +210,7 @@ export default function AdminPage() {
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
                   required
-                  className="w-full bg-navy border border-purple/30 text-cream rounded-xl px-4 py-2.5 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 placeholder-cream/30"
+                  className="w-full bg-navy border border-purple/30 text-cream rounded-xl px-4 py-3 font-sans text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 placeholder-cream/30"
                 />
               </div>
               <div>
@@ -222,7 +222,7 @@ export default function AdminPage() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  className="w-full bg-navy border border-purple/30 text-cream rounded-xl px-4 py-2.5 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 placeholder-cream/30"
+                  className="w-full bg-navy border border-purple/30 text-cream rounded-xl px-4 py-3 font-sans text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 placeholder-cream/30"
                 />
               </div>
               <div>
@@ -234,7 +234,7 @@ export default function AdminPage() {
                   onChange={(e) =>
                     setNewRole(e.target.value as "user" | "admin")
                   }
-                  className="w-full bg-navy border border-purple/30 text-cream rounded-xl px-4 py-2.5 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50"
+                  className="w-full bg-navy border border-purple/30 text-cream rounded-xl px-4 py-3 font-sans text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50"
                 >
                   <option value="user">Utilisateur</option>
                   <option value="admin">Administrateur</option>
@@ -245,7 +245,7 @@ export default function AdminPage() {
             <button
               type="submit"
               disabled={formLoading}
-              className="inline-flex items-center justify-center rounded-xl font-sans font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gold/50 bg-gold text-navy hover:bg-gold-light shadow-lg shadow-gold/20 px-5 py-2.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="inline-flex items-center justify-center rounded-xl font-sans font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gold/50 bg-gold text-navy hover:bg-gold-light shadow-lg shadow-gold/20 px-5 py-3 text-sm min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {formLoading ? "Création..." : "Créer le compte"}
             </button>
@@ -264,7 +264,7 @@ export default function AdminPage() {
               >
                 {editingId === user.id ? (
                   <div className="space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       <div>
                         <label className="block text-xs font-sans text-cream/60 mb-1">
                           Nom
@@ -320,18 +320,18 @@ export default function AdminPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-purple/30 flex items-center justify-center text-cream font-sans font-bold text-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                      <div className="w-10 h-10 rounded-full bg-purple/30 flex items-center justify-center text-cream font-sans font-bold text-sm shrink-0">
                         {user.name.charAt(0).toUpperCase()}
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-cream font-sans font-semibold text-sm">
+                          <span className="text-cream font-sans font-semibold text-sm truncate">
                             {user.name}
                           </span>
                           <span
-                            className={`text-xs font-sans px-2 py-0.5 rounded-full ${
+                            className={`text-xs font-sans px-2 py-0.5 rounded-full shrink-0 ${
                               user.role === "admin"
                                 ? "bg-gold/20 text-gold"
                                 : "bg-purple/20 text-purple-light"
@@ -342,22 +342,22 @@ export default function AdminPage() {
                               : "Utilisateur"}
                           </span>
                         </div>
-                        <div className="text-cream/50 text-xs font-sans">
+                        <div className="text-cream/50 text-xs font-sans truncate">
                           {user.email} — Créé le{" "}
                           {formatDate(user.createdAt)}
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0 ml-13 sm:ml-0">
                       <button
                         onClick={() => startEdit(user)}
-                        className="text-cream/60 hover:text-cream text-sm font-sans px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+                        className="text-cream/60 hover:text-cream text-sm font-sans px-3 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
                       >
                         Modifier
                       </button>
                       <button
                         onClick={() => handleDelete(user.id, user.email)}
-                        className="text-red-400/70 hover:text-red-400 text-sm font-sans px-3 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors cursor-pointer"
+                        className="text-red-400/70 hover:text-red-400 text-sm font-sans px-3 py-2 rounded-lg hover:bg-red-500/10 transition-colors cursor-pointer"
                       >
                         Supprimer
                       </button>

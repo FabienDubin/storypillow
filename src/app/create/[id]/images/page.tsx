@@ -213,37 +213,39 @@ export default function ImagesPage({
       <StarField count={30} />
       <Header />
 
-      <main className="relative z-10 max-w-3xl mx-auto px-6 py-10">
+      <main className="relative z-10 max-w-3xl mx-auto px-4 py-6 sm:px-6 sm:py-10">
         <StepIndicator
           currentStep={5}
           totalSteps={5}
           labels={STEP_LABELS}
         />
 
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-cream font-sans">
+            <h1 className="text-xl sm:text-2xl font-bold text-cream font-sans">
               Illustrations
             </h1>
-            <p className="text-cream/60 font-sans mt-1">
+            <p className="text-cream/60 font-sans mt-1 text-sm sm:text-base">
               Modifiez les prompts et générez les images
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <Button
               variant="secondary"
+              size="sm"
               onClick={generatePrompts}
               loading={generatingPrompts}
               disabled={generatingPrompts || generatingAll}
             >
-              Régénérer les prompts
+              Régénérer prompts
             </Button>
             <Button
+              size="sm"
               onClick={handleGenerateAll}
               loading={generatingAll}
               disabled={generatingAll || generatingPrompts}
             >
-              Générer toutes les images
+              Générer toutes
             </Button>
           </div>
         </div>
@@ -269,7 +271,7 @@ export default function ImagesPage({
           </Card>
         ) : (
           <>
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {pages.map((page, index) => (
                 <Card key={page.id}>
                   <div className="flex items-center gap-3 mb-3">
@@ -320,7 +322,7 @@ export default function ImagesPage({
                         handleSavePrompt(page.id, page.imagePrompt);
                     }}
                     rows={3}
-                    className="w-full bg-navy border border-purple/20 text-cream/70 rounded-xl p-3 font-sans text-xs focus:outline-none focus:ring-1 focus:ring-gold/30 resize-none mb-3"
+                    className="w-full bg-navy border border-purple/20 text-cream/70 rounded-xl p-3 font-sans text-sm sm:text-xs focus:outline-none focus:ring-1 focus:ring-gold/30 resize-none mb-3"
                   />
 
                   <div className="flex gap-2">

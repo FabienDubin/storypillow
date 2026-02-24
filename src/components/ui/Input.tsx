@@ -18,7 +18,7 @@ export default function Input({
   rows = 3,
 }: InputProps) {
   const baseClass =
-    "w-full bg-navy-light border border-purple/30 text-cream rounded-xl px-4 py-2.5 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 placeholder-cream/30";
+    "w-full bg-navy-light border border-purple/30 text-cream rounded-xl px-4 py-3 font-sans text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 placeholder-cream/30";
 
   return (
     <div>

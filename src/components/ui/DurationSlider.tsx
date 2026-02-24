@@ -16,7 +16,7 @@ export default function DurationSlider({
       <label className="block text-sm font-sans font-medium text-cream/80 mb-1.5">
         Durée de lecture
       </label>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         {DURATION_OPTIONS.map((d) => (
           <button
             key={d}
