@@ -157,8 +157,8 @@ export default function CharactersPage({
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Erreur");
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || `Erreur ${res.status}`);
       }
 
       setSavedToLibrary((prev) => new Set(prev).add(characterId));
