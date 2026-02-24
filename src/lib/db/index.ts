@@ -1,34 +1,64 @@
 import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { drizzle, BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import * as schema from "./schema";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
 
-// Read DATABASE_URL or fall back to default path
-const envUrl = process.env.DATABASE_URL;
-let dbPath: string;
-if (envUrl) {
-  // Strip "file:" prefix if present
-  dbPath = envUrl.replace(/^file:/, "");
-  if (!path.isAbsolute(dbPath)) {
-    dbPath = path.resolve(process.cwd(), dbPath);
+type DB = BetterSQLite3Database<typeof schema>;
+
+let _db: DB | null = null;
+
+/**
+ * Lazily create the database connection and run migrations.
+ * This avoids SQLITE_BUSY errors when Next.js spawns 15 build workers
+ * that all try to import this module simultaneously.
+ */
+function getDb(): DB {
+  if (_db) return _db;
+
+  // Read DATABASE_URL or fall back to default path
+  const envUrl = process.env.DATABASE_URL;
+  let dbPath: string;
+  if (envUrl) {
+    // Strip "file:" prefix if present
+    dbPath = envUrl.replace(/^file:/, "");
+    if (!path.isAbsolute(dbPath)) {
+      dbPath = path.resolve(process.cwd(), dbPath);
+    }
+  } else {
+    dbPath = path.join(process.cwd(), "data", "storypillow.db");
   }
-} else {
-  dbPath = path.join(process.cwd(), "data", "storypillow.db");
+
+  const dbDir = path.dirname(dbPath);
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
+  const sqlite = new Database(dbPath);
+
+  // Enable WAL mode for better performance
+  sqlite.pragma("journal_mode = WAL");
+  sqlite.pragma("foreign_keys = ON");
+  sqlite.pragma("busy_timeout = 5000");
+
+  _db = drizzle(sqlite, { schema });
+
+  initializeDatabase(sqlite);
+
+  return _db;
 }
 
-const dbDir = path.dirname(dbPath);
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
-}
-const sqlite = new Database(dbPath);
-
-// Enable WAL mode for better performance
-sqlite.pragma("journal_mode = WAL");
-sqlite.pragma("foreign_keys = ON");
-
-export const db = drizzle(sqlite, { schema });
+// Proxy so that `db.select()`, `db.insert()`, etc. lazily initialize on first use
+export const db = new Proxy({} as DB, {
+  get(_target, prop, receiver) {
+    const realDb = getDb();
+    const value = Reflect.get(realDb, prop, receiver);
+    if (typeof value === "function") {
+      return value.bind(realDb);
+    }
+    return value;
+  },
+});
 
 // Hash password using scrypt (sync, for seeding only)
 function hashPasswordSync(password: string): string {
@@ -38,7 +68,7 @@ function hashPasswordSync(password: string): string {
 }
 
 // Run migrations on startup
-function initializeDatabase() {
+function initializeDatabase(sqlite: Database.Database) {
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
@@ -160,7 +190,5 @@ function initializeDatabase() {
     console.log(`Admin account seeded for ${adminEmail}`);
   }
 }
-
-initializeDatabase();
 
 export { schema };
